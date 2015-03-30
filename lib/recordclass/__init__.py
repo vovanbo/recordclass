@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .mutabletuple import mutabletuple
+from .memoryslots import memoryslots
 from .record import recordclass
 
-__version__ = '0.3'
+__version__ = '0.4'

@@ -1,4 +1,5 @@
-from recordarray.mutabletuple import mutabletuple
+import unittest
+from recordclass.memoryslots import memoryslots
 try:
     from test import support, seq_tests
 except:
@@ -7,63 +8,62 @@ except:
 import gc
 import pickle
 
-class ObjectArrayTest(seq_tests.CommonTest):
-    type2test = mutabletuple
+class MemorySlotsTest(unittest.TestCase):
+    type2test = memoryslots
 
     def test_constructors(self):
         #super().test_constructors()
         # calling built-in types without argument must return empty
-        self.assertEqual(mutabletuple(), ())
-        self.assertEqual(mutabletuple([]), mutabletuple([]))
-        self.assertEqual(mutabletuple([0, 1, 2, 3]), mutabletuple([0, 1, 2, 3]))
-        self.assertEqual(mutabletuple(''), mutabletuple([]))
-        self.assertEqual(mutabletuple('spam'), mutabletuple(['s', 'p', 'a', 'm']))
+        self.assertEqual(memoryslots(), ())
+        self.assertEqual(memoryslots([]), memoryslots([]))
+        self.assertEqual(memoryslots(0, 1, 2, 3), memoryslots(0, 1, 2, 3))
+        self.assertEqual(memoryslots(''), memoryslots(''))
 
     def test_truth(self):
         #super().test_truth()
-        self.assertTrue(not mutabletuple([]))
-        self.assertTrue(mutabletuple([42]))
+        self.assertTrue(not memoryslots())
+        self.assertTrue(memoryslots([42]))
 
     def test_len(self):
         #super().test_len()
-        self.assertEqual(len(mutabletuple([])), 0)
-        self.assertEqual(len(mutabletuple([0])), 1)
-        self.assertEqual(len(mutabletuple([0, 1, 2])), 3)
+        self.assertEqual(len(memoryslots()), 0)
+        self.assertEqual(len(memoryslots(0)), 1)
+        self.assertEqual(len(memoryslots(0, 1, 2)), 3)
 
     def test_iadd(self):
         #super().test_iadd()
-        u = mutabletuple([0, 1])
+        u = memoryslots(0, 1)
         u2 = u
         u += (2, 3)
         self.assertEqual(u, (0,1,2,3))
 
     def test_imul(self):
         #super().test_imul()
-        u = mutabletuple([0, 1])
+        u = memoryslots(0, 1)
         u2 = u
         u *= 3
         self.assertEqual(u, (0,1,0,1,0,1))
 
-    def test_mutabletupleresizebug(self):
+    def test_memoryslotsresizebug(self):
         # Check that a specific bug in _PyTuple_Resize() is squashed.
         def f():
             for i in range(1000):
                 yield i
-        self.assertEqual(list(mutabletuple(f())), list(range(1000)))
+        self.assertEqual(list(memoryslots(*f())), list(range(1000)))
  
     def test_repr(self):
-        l0 = mutabletuple([])
-        l2 = mutabletuple([0, 1, 2])
-        a0 = self.type2test(l0)
-        a2 = self.type2test(l2)
+        l0 = memoryslots()
+        l2 = memoryslots(0, 1, 2)
+        a0 = self.type2test(*l0)
+        a2 = self.type2test(*l2)
 
         self.assertEqual(str(a0), repr(l0))
         self.assertEqual(str(a2), repr(l2))
-        self.assertEqual(repr(a0), "mutabletuple([])")
-        self.assertEqual(repr(a2), "mutabletuple([0, 1, 2])")
+        self.assertEqual(repr(a0), "memoryslots()")
+        self.assertEqual(repr(a2), "memoryslots(0, 1, 2)")
 
     def _not_tracked(self, t):
-        # Nested mutabletuples can take several collections to untrack
+        # Nested memoryslotss can take several collections to untrack
         gc.collect()
         gc.collect()
         self.assertFalse(gc.is_tracked(t), t)
@@ -118,12 +118,12 @@ class ObjectArrayTest(seq_tests.CommonTest):
         # Issue 8847: In the PGO build, the MSVC linker's COMDAT folding
         # optimization causes failures in code that relies on distinct
         # function addresses.
-        class T(mutabletuple): pass
+        class T(memoryslots): pass
         with self.assertRaises(TypeError):
             [3,] + T((1,2))
 
 def main():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(ObjectArrayTest))
+    suite.addTest(unittest.makeSuite(MemorySlotsTest))
     return suite
 

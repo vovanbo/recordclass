@@ -1,6 +1,6 @@
 import sys as _sys
 from keyword import iskeyword as _iskeyword
-from .mutabletuple import mutabletuple
+from .memoryslots import memoryslots
 import re
 
 def isidentifier(s):
@@ -8,13 +8,13 @@ def isidentifier(s):
 
 _class_template = """\
 from collections import OrderedDict
-from recordarray.mutabletuple import mutabletuple
+from recordclass.memoryslots import memoryslots
 
 _property = property
 _tuple = tuple
-_mutabletuple = mutabletuple
+_memoryslots = memoryslots
 
-class {typename}(mutabletuple):
+class {typename}(memoryslots):
     '{typename}({arg_list})'
 
     __slots__ = ()
@@ -23,22 +23,21 @@ class {typename}(mutabletuple):
 
     def __new__(_cls, {arg_list}):
         'Create new instance of {typename}({arg_list})'
-        return _mutabletuple.__new__(_cls, ({arg_list}))
+        return _memoryslots.__new__(_cls, {arg_list})
 
     @classmethod
     def _make(cls, iterable):
         'Make a new {typename} object from a sequence or iterable'
-        result = _mutabletuple.__new__(cls, iterable)
+        result = _memoryslots.__new__(cls, *iterable)
         if len(result) != {num_fields:d}:
             raise TypeError('Expected {num_fields:d} arguments, got %d' % len(result))
         return result
 
     def _replace(_self, **kwds):
         'Return a new {typename} object replacing specified fields with new values'
-        result = _self._make(map(kwds.pop, {field_names!r}, _self))
-        if kwds:
-            raise ValueError('Got unexpected field names: %r' % list(kwds))
-        return result
+        for name, val in kwds.items():
+            setattr(_self, name, val)
+        return _self
 
     def __repr__(self):
         'Return a nicely formatted representation string'

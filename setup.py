@@ -28,8 +28,8 @@ from distutils.extension import Extension
 
 ext_modules = [
         Extension(
-            "recordclass.mutabletuple",
-            ["lib/recordclass/mutabletuple.c"]
+            "recordclass.memoryslots",
+            ["lib/recordclass/memoryslots.c"]
         ),
 ]
 
@@ -37,8 +37,8 @@ long_description = open('README.rst').read()
 
 setup(
     name = 'recordclass',
-    version = '0.3',
-    description = 'Mutable variant of collections.namedtuple that support assignments',
+    version = '0.4',
+    description = 'Mutable variant of collections.namedtuple, which supports assignments',
     author = 'Zaur Shibzukhov',
     author_email = 'szport@gmail.com',
     #maintainer = 'Zaur Shibzukhov',

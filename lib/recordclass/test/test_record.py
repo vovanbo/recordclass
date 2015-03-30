@@ -1,7 +1,7 @@
 """Unit tests for recordclass.py."""
 
 import unittest, doctest, operator
-from recordarray import recordclass
+from recordclass import recordclass
 from collections import OrderedDict
 import pickle, copy
 import keyword
@@ -14,34 +14,34 @@ except:
     from test import test_support as support
 
 
-TestNT = recordclassclass('TestNT', 'x y z')    # type used for pickle tests
+TestNT = recordclass('TestNT', 'x y z')    # type used for pickle tests
 
 class RecordClassTest(unittest.TestCase):
 
     def test_factory(self):
-        Point = recordclassclass('Point', 'x y')
+        Point = recordclass('Point', 'x y')
         self.assertEqual(Point.__name__, 'Point')
         self.assertEqual(Point.__slots__, ())
         self.assertEqual(Point.__module__, __name__)
         self.assertEqual(Point._fields, ('x', 'y'))
-        self.assertIn('class Point(mutabletuple)', Point._source)
+        self.assertIn('class Point(memoryslots)', Point._source)
 
-        self.assertRaises(ValueError, recordclassclass, 'abc%', 'efg ghi')       # type has non-alpha char
-        self.assertRaises(ValueError, recordclassclass, 'class', 'efg ghi')      # type has keyword
-        self.assertRaises(ValueError, recordclassclass, '9abc', 'efg ghi')       # type starts with digit
+        self.assertRaises(ValueError, recordclass, 'abc%', 'efg ghi')       # type has non-alpha char
+        self.assertRaises(ValueError, recordclass, 'class', 'efg ghi')      # type has keyword
+        self.assertRaises(ValueError, recordclass, '9abc', 'efg ghi')       # type starts with digit
 
-        self.assertRaises(ValueError, recordclassclass, 'abc', 'efg g%hi')       # field with non-alpha char
-        self.assertRaises(ValueError, recordclassclass, 'abc', 'abc class')      # field has keyword
-        self.assertRaises(ValueError, recordclassclass, 'abc', '8efg 9ghi')      # field starts with digit
-        self.assertRaises(ValueError, recordclassclass, 'abc', '_efg ghi')       # field with leading underscore
-        self.assertRaises(ValueError, recordclassclass, 'abc', 'efg efg ghi')    # duplicate field
+        self.assertRaises(ValueError, recordclass, 'abc', 'efg g%hi')       # field with non-alpha char
+        self.assertRaises(ValueError, recordclass, 'abc', 'abc class')      # field has keyword
+        self.assertRaises(ValueError, recordclass, 'abc', '8efg 9ghi')      # field starts with digit
+        self.assertRaises(ValueError, recordclass, 'abc', '_efg ghi')       # field with leading underscore
+        self.assertRaises(ValueError, recordclass, 'abc', 'efg efg ghi')    # duplicate field
 
-        recordclassclass('Point0', 'x1 y2')   # Verify that numbers are allowed in names
-        recordclassclass('_', 'a b c')        # Test leading underscores in a typename
+        recordclass('Point0', 'x1 y2')   # Verify that numbers are allowed in names
+        recordclass('_', 'a b c')        # Test leading underscores in a typename
 
-        nt = recordclassclass('nt', 'the quick brown fox')                       # check unicode input
+        nt = recordclass('nt', 'the quick brown fox')                       # check unicode input
         self.assertNotIn("u'", repr(nt._fields))
-        nt = recordclassclass('nt', ('the', 'quick'))                           # check unicode input
+        nt = recordclass('nt', ('the', 'quick'))                           # check unicode input
         self.assertNotIn("u'", repr(nt._fields))
 
         self.assertRaises(TypeError, Point._make, [11])                     # catch too few args
@@ -50,7 +50,7 @@ class RecordClassTest(unittest.TestCase):
     @unittest.skipIf(sys.flags.optimize >= 2,
                      "Docstrings are omitted with -O2 and above")
     def test_factory_doc_attr(self):
-        Point = recordclassclass('Point', 'x y')
+        Point = recordclass('Point', 'x y')
         self.assertEqual(Point.__doc__, 'Point(x, y)')
 
     def test_name_fixer(self):
@@ -62,7 +62,7 @@ class RecordClassTest(unittest.TestCase):
             [('abc', 'efg', 'efg', 'ghi'), ('abc', 'efg', '_2', 'ghi')],    # duplicate field
             [('abc', '', 'x'), ('abc', '_1', 'x')],                         # fieldname is a space
         ]:
-            self.assertEqual(recordclassclass('NT', spec, rename=True)._fields, renamed)
+            self.assertEqual(recordclass('NT', spec, rename=True)._fields, renamed)
 
     def test_instance(self):
         Point = recordclass('Point', 'x y')
@@ -81,7 +81,7 @@ class RecordClassTest(unittest.TestCase):
         self.assertEqual(p, Point._make([11, 22]))                          # test _make classmethod
         self.assertEqual(p._fields, ('x', 'y'))                             # test _fields attribute
         self.assertEqual(p._replace(x=1), (1, 22))                          # test _replace method
-        self.assertEqual(p._asdict(), dict(x=11, y=22))                     # test _asdict method
+        self.assertEqual(p._asdict(), dict(x=1, y=22))                     # test _asdict method
         self.assertEqual(vars(p), p._asdict())                              # verify that vars() works
 
         p.x = 1
@@ -213,7 +213,7 @@ class RecordClassTest(unittest.TestCase):
         # test _fields
         self.assertEqual(T._fields, tuple(words))
         # test __getnewargs__
-        self.assertEqual(t.__getnewargs__(), values)
+        self.assertEqual(t.__getnewargs__(), newvalues)
 
     def test_repr(self):
         with support.captured_stdout() as template:
