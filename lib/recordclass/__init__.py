@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .memoryslots import memoryslots
+from .memoryslots import memoryslots, itemgetset
 from .record import recordclass
 
 __version__ = '0.4'

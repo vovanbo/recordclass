@@ -30,20 +30,6 @@ class MemorySlotsTest(unittest.TestCase):
         self.assertEqual(len(memoryslots(0)), 1)
         self.assertEqual(len(memoryslots(0, 1, 2)), 3)
 
-    def test_iadd(self):
-        #super().test_iadd()
-        u = memoryslots(0, 1)
-        u2 = u
-        u += (2, 3)
-        self.assertEqual(u, (0,1,2,3))
-
-    def test_imul(self):
-        #super().test_imul()
-        u = memoryslots(0, 1)
-        u2 = u
-        u *= 3
-        self.assertEqual(u, (0,1,0,1,0,1))
-
     def test_memoryslotsresizebug(self):
         # Check that a specific bug in _PyTuple_Resize() is squashed.
         def f():

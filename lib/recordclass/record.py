@@ -8,11 +8,12 @@ def isidentifier(s):
 
 _class_template = """\
 from collections import OrderedDict
-from recordclass.memoryslots import memoryslots
+from recordclass.memoryslots import memoryslots, itemgetset
 
 _property = property
 _tuple = tuple
 _memoryslots = memoryslots
+_itemgetset = itemgetset
 
 class {typename}(memoryslots):
     '{typename}({arg_list})'
@@ -36,22 +37,20 @@ class {typename}(memoryslots):
     def _replace(_self, **kwds):
         'Return a new {typename} object replacing specified fields with new values'
         for name, val in kwds.items():
+            #print(name, val)
             setattr(_self, name, val)
         return _self
 
     def __repr__(self):
         'Return a nicely formatted representation string'
-        return self.__class__.__name__ + '({repr_fmt})' % self
-
-    @property
-    def __dict__(self):
-        'A new OrderedDict mapping field names to their values'
-        return OrderedDict(zip(self._fields, self))
+        return self.__class__.__name__ + '({repr_fmt})' % tuple(self)
 
     def _asdict(self):
-        'Return a new OrderedDict which maps field names to their values.'
-        return self.__dict__
+        'Return a new OrderedDict which maps field names to their values'
+        return OrderedDict(zip(self.__class__._fields, tuple(self) ))
 
+    __dict__ = _property(_asdict)
+        
     def __getnewargs__(self):
         'Return self as a plain tuple.  Used by copy and pickle.'
         return tuple(self)
@@ -69,16 +68,16 @@ class {typename}(memoryslots):
 
 _repr_template = '{name}=%r'
 
-_field_template = '''\
-    def __{name}_get(self):
-        return self[{index:d}]
-    def __{name}_set(self, val):
-        self[{index:d}] = val
-    {name} = _property(__{name}_get, __{name}_set, doc='Alias for field number {index:d}')
-    del __{name}_set, __{name}_get
-'''
+_field_template = '    {name} = _itemgetset({index:d})'
 
-def recordclass(typename, field_names, verbose=False, rename=False):
+#     def __{name}_get(self):
+#         return self[{index:d}]
+#     def __{name}_set(self, val):
+#         self[{index:d}] = val
+#     {name} = _property(__{name}_get, __{name}_set, doc='Alias for field number {index:d}')
+#     del __{name}_set, __{name}_get
+
+def recordclass(typename, field_names, verbose=False, rename=False, source=True):
     """Returns a new subclass of array with named fields.
 
     >>> Point = recordarray('Point', ['x', 'y'])
@@ -148,11 +147,12 @@ def recordclass(typename, field_names, verbose=False, rename=False):
 
     # Execute the template string in a temporary namespace and support
     # tracing utilities by setting a value for frame.f_globals['__name__']
-    namespace = dict(__name__='recordarray_%s' % typename)
+    namespace = dict(__name__='recorclass_%s' % typename)
     code = compile(class_definition, "", "exec")
     eval(code, namespace)
     result = namespace[typename]
-    result._source = class_definition
+    if source:
+        result._source = class_definition
     if verbose:
         print(result._source)
 

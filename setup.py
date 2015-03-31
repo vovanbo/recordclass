@@ -21,16 +21,24 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+# cython: language_level=3
 
 from distutils.core import setup
 from distutils.command.build_ext import build_ext
 from distutils.extension import Extension
+
+# from Cython.Distutils import Extension, build_ext
+# from Cython.Compiler import Options
 
 ext_modules = [
         Extension(
             "recordclass.memoryslots",
             ["lib/recordclass/memoryslots.c"]
         ),
+#         Extension(
+#             "recordclass.itemgetset",
+#             ["lib/recordclass/itemgetset.pyx"]
+#         ),
 ]
 
 long_description = open('README.rst').read()
