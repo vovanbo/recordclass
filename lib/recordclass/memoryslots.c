@@ -695,7 +695,9 @@ static PyObject* itemgetset_new(PyTypeObject *t, PyObject *a, PyObject *k) {
     PyObject *o;
     
     PyObject *empty_tuple = PyTuple_New(0);
+    Py_INCREF(empty_tuple);
     o = (PyObject *) PyBaseObject_Type.tp_new(t, empty_tuple, NULL);
+    Py_DECREF(empty_tuple);
     return o;
 }
 static int itemgetset_init(PyObject *self, PyObject *args, PyObject *kwds) {
@@ -705,10 +707,13 @@ static int itemgetset_init(PyObject *self, PyObject *args, PyObject *kwds) {
     tmp = PySequence_Tuple(args);
     item = PyTuple_GET_ITEM(tmp, 0);
     i = PyNumber_AsSsize_t(item, PyExc_IndexError);
-    if (i == -1 && PyErr_Occurred())
+    if (i == -1 && PyErr_Occurred()) {
+        Py_DECREF(tmp);
         return -1;
+    }
     else {
         ((struct itemgetset_object*)self)->i = i;
+        Py_DECREF(tmp);
         return 0;
     }    
 }
