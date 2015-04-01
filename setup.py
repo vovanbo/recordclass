@@ -27,18 +27,11 @@ from distutils.core import setup
 from distutils.command.build_ext import build_ext
 from distutils.extension import Extension
 
-# from Cython.Distutils import Extension, build_ext
-# from Cython.Compiler import Options
-
 ext_modules = [
         Extension(
             "recordclass.memoryslots",
             ["lib/recordclass/memoryslots.c"]
         ),
-#         Extension(
-#             "recordclass.itemgetset",
-#             ["lib/recordclass/itemgetset.pyx"]
-#         ),
 ]
 
 long_description = open('README.rst').read()
