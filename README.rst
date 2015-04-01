@@ -8,7 +8,7 @@ in order to create record-like classes.
 
 * ``memoryslots`` is ``tuple``-like type, which supports assignment operations. 
 * ``recordclass`` is a factory function that create a "mutable" analog of 
-  ``collection.namedtuple`` factory function.
+  ``collection.namedtuple``.
 
 This library actually is a "proof of concept" for the problem of "mutable" 
 alternative of ``namedtuple``.
