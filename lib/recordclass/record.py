@@ -9,6 +9,7 @@ def isidentifier(s):
 _class_template = """\
 from collections import OrderedDict
 from recordclass.memoryslots import memoryslots, itemgetset
+#from recordclass.itemgetset import itemgetset
 
 _property = property
 _tuple = tuple
@@ -70,12 +71,13 @@ _repr_template = '{name}=%r'
 
 _field_template = '    {name} = _itemgetset({index:d})'
 
+# _field_template = '''\
 #     def __{name}_get(self):
 #         return self[{index:d}]
 #     def __{name}_set(self, val):
 #         self[{index:d}] = val
 #     {name} = _property(__{name}_get, __{name}_set, doc='Alias for field number {index:d}')
-#     del __{name}_set, __{name}_get
+#     del __{name}_set, __{name}_get'''
 
 def recordclass(typename, field_names, verbose=False, rename=False, source=True):
     """Returns a new subclass of array with named fields.

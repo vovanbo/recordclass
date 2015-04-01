@@ -1,5 +1,6 @@
 /* memoryslots type *********************************************************/
 
+#include "pyconfig.h"
 #include "Python.h"
 
 #ifndef Py_RETURN_NOTIMPLEMENTED
@@ -8,17 +9,8 @@
     return Py_INCREF(Py_NotImplemented), Py_NotImplemented
 #endif
 
-#ifndef PyModuleDef_HEAD_INIT
-#define PyModuleDef_HEAD_INIT { \
-    PyObject_HEAD_INIT(NULL)    \
-    NULL, /* m_init */          \
-    0,    /* m_index */         \
-    NULL, /* m_copy */          \
-  }
-#endif
-
 static PyTypeObject PyMemorySlots_Type;
-static PyObject * memoryslots_slice(PyObject *a, Py_ssize_t ilow, Py_ssize_t ihigh);
+//static PyObject * memoryslots_slice(PyObject *a, Py_ssize_t ilow, Py_ssize_t ihigh);
 
 
 PyObject *
@@ -58,12 +50,14 @@ memoryslots_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         
         tmp = (PyTupleObject*)PySequence_Tuple(args);
         n = PyTuple_GET_SIZE(tmp);
+        
         if (type == &PyMemorySlots_Type)
             newobj = (PyTupleObject*)PyMemorySlots_New(n);
         else    
             newobj = (PyTupleObject*)(type->tp_alloc(type, n));
         if (newobj == NULL)
             return NULL;
+            
         if (n > 0) {
             for(i = 0; i < n; i++) {
                 item = PyTuple_GET_ITEM(tmp, i);
@@ -687,117 +681,151 @@ struct itemgetset_object {
   int i;
 };
 
+/*static PyTypeObject itemgetset_type;*/
+
 static PyMethodDef itemgetset_methods[] = {
   {0, 0, 0, 0}
 };
 
-static PyObject* itemgetset_new(PyTypeObject *t, PyObject *a, PyObject *k) {
-    PyObject *o;
+static PyObject* itemgetset_new(PyTypeObject *t, PyObject *args, PyObject *k) {    
+    PyObject *ob;
+    PyObject *item;
+    int i;
+
+    if ((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0) {
+        ob = (*t->tp_alloc)(t, 0);
+    } else {
+        ob = (PyObject*) PyBaseObject_Type.tp_new(t, PyTuple_New(0), 0);
+    }
     
-    PyObject *empty_tuple = PyTuple_New(0);
-    Py_INCREF(empty_tuple);
-    o = (PyObject *) PyBaseObject_Type.tp_new(t, empty_tuple, NULL);
-    Py_DECREF(empty_tuple);
-    return o;
-}
-static int itemgetset_init(PyObject *self, PyObject *args, PyObject *kwds) {
-    PyObject *tmp, *item;
-    Py_ssize_t i;
+    if (ob == NULL)
+        return NULL;
     
-    tmp = PySequence_Tuple(args);
-    item = PyTuple_GET_ITEM(tmp, 0);
+    item = PyTuple_GET_ITEM(args, 0);
+
     i = PyNumber_AsSsize_t(item, PyExc_IndexError);
     if (i == -1 && PyErr_Occurred()) {
-        Py_DECREF(tmp);
-        return -1;
+        Py_DECREF(ob);
+        return NULL;
     }
     else {
-        ((struct itemgetset_object*)self)->i = i;
-        Py_DECREF(tmp);
-        return 0;
+        ((struct itemgetset_object*)ob)->i = i;
     }    
+    return ob;
 }
 
+// static int itemgetset_init(PyObject *self, PyObject *args, PyObject *kwds) {
+//     PyObject *item;
+//     Py_ssize_t i;
+//         
+//     item = PyTuple_GET_ITEM(args, 0);
+//     i = PyNumber_AsSsize_t(item, PyExc_IndexError);
+//     if (i == -1 && PyErr_Occurred()) {
+//         return -1;
+//     }
+//     else {
+//         ((struct itemgetset_object*)self)->i = i;
+//         return 0;
+//     }    
+// }
+
 static void itemgetset_dealloc(PyObject *o) {
-  (*Py_TYPE(o)->tp_free)(o);
+    (*Py_TYPE(o)->tp_free)(o);
 }
 
 static PyObject* itemgetset_get(PyObject *self, PyObject *obj, PyObject *type) {
-    if (obj == Py_None)
+    Py_ssize_t i;
+    PyObject *v;
+    
+    if (obj == NULL || obj == Py_None) {
+        Py_INCREF(self);
         return self;
-    else {
-        return PyTuple_GET_ITEM(obj, ((struct itemgetset_object*)self)->i);
     }
+    i = ((struct itemgetset_object*)self)->i;
+    v = PyTuple_GET_ITEM(obj, i);
+    Py_INCREF(v);
+    return v;
 }
 
 static int itemgetset_set(PyObject *self, PyObject *obj, PyObject *value) {
+    Py_ssize_t i;
+
+    if (value == NULL) {
+        PyErr_SetString(PyExc_NotImplementedError, "__delete__");
+        return -1;
+    }
+    if (obj == NULL || obj == Py_None)
+        return 0;
+        
     Py_INCREF(value);
-    PyTuple_SET_ITEM(obj, ((struct itemgetset_object*)self)->i, value);
+    i = ((struct itemgetset_object*)self)->i;
+    PyTuple_SET_ITEM(obj, i, value);
     return 0;
 }
 
-PyTypeObject itemgetset_type = {
-  PyVarObject_HEAD_INIT(0, 0)
-  "recordclass.memoryslots.itemgetset", /*tp_name*/
-  sizeof(struct itemgetset_object), /*tp_basicsize*/
-  0, /*tp_itemsize*/
-  itemgetset_dealloc, /*tp_dealloc*/
-  0, /*tp_print*/
-  0, /*tp_getattr*/
-  0, /*tp_setattr*/
-  #if PY_MAJOR_VERSION < 3
-  0, /*tp_compare*/
-  #else
-  0, /*reserved*/
-  #endif
-  0, /*tp_repr*/
-  0, /*tp_as_number*/
-  0, /*tp_as_sequence*/
-  0, /*tp_as_mapping*/
-  0, /*tp_hash*/
-  0, /*tp_call*/
-  0, /*tp_str*/
-  0, /*tp_getattro*/
-  0, /*tp_setattro*/
-  0, /*tp_as_buffer*/
-  Py_TPFLAGS_DEFAULT, /*tp_flags*/
-  0, /*tp_doc*/
-  0, /*tp_traverse*/
-  0, /*tp_clear*/
-  0, /*tp_richcompare*/
-  0, /*tp_weaklistoffset*/
-  0, /*tp_iter*/
-  0, /*tp_iternext*/
-  itemgetset_methods, /*tp_methods*/
-  0, /*tp_members*/
-  0, /*tp_getset*/
-  0, /*tp_base*/
-  0, /*tp_dict*/
-  itemgetset_get, /*tp_descr_get*/
-  itemgetset_set, /*tp_descr_set*/
-  0, /*tp_dictoffset*/
-  itemgetset_init, /*tp_init*/
-  0, /*tp_alloc*/
-  itemgetset_new, /*tp_new*/
-  0, /*tp_free*/
-  0, /*tp_is_gc*/
+static PyTypeObject itemgetset_type = {
+    PyVarObject_HEAD_INIT(0, 0)
+    "recordclass.memoryslots.itemgetset", /*tp_name*/
+    sizeof(struct itemgetset_object), /*tp_basicsize*/
+    0, /*tp_itemsize*/
+    itemgetset_dealloc, /*tp_dealloc*/
+    0, /*tp_print*/
+    0, /*tp_getattr*/
+    0, /*tp_setattr*/
+    0, /*reserved*/
+    0, /*tp_repr*/
+    0, /*tp_as_number*/
+    0, /*tp_as_sequence*/
+    0, /*tp_as_mapping*/
+    0, /*tp_hash*/
+    0, /*tp_call*/
+    0, /*tp_str*/
+    0, /*tp_getattro*/
+    0, /*tp_setattro*/
+    0, /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    0, /*tp_doc*/
+    0, /*tp_traverse*/
+    0, /*tp_clear*/
+    0, /*tp_richcompare*/
+    0, /*tp_weaklistoffset*/
+    0, /*tp_iter*/
+    0, /*tp_iternext*/
+    itemgetset_methods, /*tp_methods*/
+    0, /*tp_members*/
+    0, /*tp_getset*/
+    0, /*tp_base*/
+    0, /*tp_dict*/
+    itemgetset_get, /*tp_descr_get*/
+    itemgetset_set, /*tp_descr_set*/
+    0, /*tp_dictoffset*/
+    0, /*tp_init*/
+    0, /*tp_alloc*/
+    itemgetset_new, /*tp_new*/
+    0, /*tp_free*/
+    0, /*tp_is_gc*/
 };
 
 /* List of functions defined in the module */
 
-
 PyDoc_STRVAR(memoryslotsmodule_doc,
-"This is a template module just for instruction.");
-
-/* Initialization function for the module (*must* be called PyInit_xx) */
+"Memoryslots module provide mutable tuple-like type `memoryslots` and descriptor type `itemgetset`.");
 
 #if PY_MAJOR_VERSION >= 3
+static PyMethodDef memoryslotsmodule_methods[] = {
+  {0, 0, 0, 0}
+};
+
 static struct PyModuleDef memoryslotsmodule = {
+  #if PY_VERSION_HEX < 0x03020000
+    { PyObject_HEAD_INIT(NULL) NULL, 0, NULL },
+  #else
     PyModuleDef_HEAD_INIT,
+  #endif
     "recordclass.memoryslots",
     memoryslotsmodule_doc,
     -1,
-    NULL,
+    memoryslotsmodule_methods,
     NULL,
     NULL,
     NULL,
@@ -810,12 +838,17 @@ PyMODINIT_FUNC
 PyInit_memoryslots(void)
 {
     PyObject *m;
+    
+    m = PyState_FindModule(&memoryslotsmodule);
+    if (m) {
+        Py_INCREF(m);
+        return m;
+    }    
 
     m = PyModule_Create(&memoryslotsmodule);
     if (m == NULL)
         return NULL;
 
-    /*PyMemorySlots_Type.tp_base = &PyType_Type;*/
     if (PyType_Ready(&PyMemorySlots_Type) < 0)
         return NULL;
     Py_INCREF(&PyMemorySlots_Type);
@@ -835,22 +868,22 @@ PyMODINIT_FUNC
 initmemoryslots(void)
 {
     PyObject *m;
-
+    
     m = Py_InitModule3("recordclass.memoryslots", NULL, memoryslotsmodule_doc);
     if (m == NULL)
         return;
+    Py_XINCREF(m);
 
-    /*PyMemorySlots_Type.tp_base = &PyType_Type;*/
     if (PyType_Ready(&PyMemorySlots_Type) < 0)
         return;
-    Py_INCREF(&PyMemorySlots_Type);
 
+    Py_INCREF(&PyMemorySlots_Type);
     PyModule_AddObject(m, "memoryslots", (PyObject *)&PyMemorySlots_Type);
 
     if (PyType_Ready(&itemgetset_type) < 0)
         return;
+    
     Py_INCREF(&itemgetset_type);
-
     PyModule_AddObject(m, "itemgetset", (PyObject *)&itemgetset_type);
 
     return;
