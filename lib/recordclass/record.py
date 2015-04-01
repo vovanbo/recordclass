@@ -9,7 +9,6 @@ def isidentifier(s):
 _class_template = """\
 from collections import OrderedDict
 from recordclass.memoryslots import memoryslots, itemgetset
-#from recordclass.itemgetset import itemgetset
 
 _property = property
 _tuple = tuple
