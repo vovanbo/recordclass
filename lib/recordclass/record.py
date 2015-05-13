@@ -20,7 +20,7 @@ class {typename}(memoryslots):
 
     __slots__ = ()
 
-    _fields = {field_names!r}
+    _fields = tuple({field_names!r})
 
     def __new__(_cls, {arg_list}):
         'Create new instance of {typename}({arg_list})'

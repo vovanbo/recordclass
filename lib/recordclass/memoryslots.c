@@ -9,9 +9,27 @@
     return Py_INCREF(Py_NotImplemented), Py_NotImplemented
 #endif
 
+#if PY_MAJOR_VERSION == 2
+static PyObject *
+_PyObject_GetBuiltin(const char *name)
+{
+    PyObject *mod_name, *mod, *attr;
+
+    mod_name = PyUnicode_FromString("__builtin__");   /* borrowed */
+    if (mod_name == NULL)
+        return NULL;
+    mod = PyImport_Import(mod_name);
+    if (mod == NULL)
+        return NULL;
+    attr = PyObject_GetAttrString(mod, name);
+    Py_DECREF(mod);
+    return attr;
+}
+#endif
+
 static PyTypeObject PyMemorySlots_Type;
 //static PyObject * memoryslots_slice(PyObject *a, Py_ssize_t ilow, Py_ssize_t ihigh);
-
+static PyObject* memoryslots_iter(PyObject *seq);
 
 PyObject *
 PyMemorySlots_New(Py_ssize_t size)
@@ -132,38 +150,6 @@ memoryslots_traverse(PyTupleObject *o, visitproc visit, void *arg)
         Py_VISIT(o->ob_item[i]);
     return 0;
 }
-
-
-/*
-PyDoc_STRVAR(memoryslots_copy_doc, "D.copy() -> a shallow copy of D.");
-*/
-
-/*
-static PyObject *
-memoryslots_copy(PyObject *ob)
-{
-    return memoryslots_slice(ob, 0, PyTuple_GET_SIZE(ob));
-}
-*/
-
-/*
-PyDoc_STRVAR(reduce_doc, "D.__reduce__()");
-
-static PyObject *
-memoryslots_reduce(PyObject *ob)
-{
-    PyObject *args;
-    PyObject *result;
-
-    args = PyTuple_Pack(1, ob);
-    if (args == NULL)
-        return NULL;
-
-    result = PyTuple_Pack(2, &PyMemorySlots_Type, args);
-    Py_DECREF(args);
-    return result;
-}
-*/
 
 static PyObject *
 memoryslots_repr(PyObject *dd)
@@ -500,13 +486,16 @@ memoryslots_repeat(PyTupleObject *a, Py_ssize_t n)
     return (PyObject *) np;
 }
 
+PyDoc_STRVAR(memoryslots_len_doc,
+"T.__len__() -- len of T");
+
 static Py_ssize_t
 memoryslots_len(PyTupleObject *self)
 {
     return PyTuple_GET_SIZE(self);
 }
 
-PyDoc_STRVAR(sizeof_doc,
+PyDoc_STRVAR(memoryslots_sizeof_doc,
 "T.__sizeof__() -- size of T in memory, in bytes");
 
 static PyObject *
@@ -592,7 +581,7 @@ memoryslots_richcompare(PyObject *v, PyObject *w, int op)
 }
 
 static PySequenceMethods memoryslots_as_sequence = {
-    0,                       /* sq_length */
+    (lenfunc)memoryslots_len,                       /* sq_length */
     (binaryfunc)memoryslots_concat,                    /* sq_concat */
     (ssizeargfunc)memoryslots_repeat,                  /* sq_repeat */
     (ssizeargfunc)memoryslots_item,                    /* sq_item */
@@ -609,12 +598,42 @@ static PyMappingMethods memoryslots_as_mapping = {
     (objobjargproc)memoryslots_ass_subscript
 };
 
+PyDoc_STRVAR(memoryslots_copy_doc, "D.copy() -> a shallow copy of D.");
+
+static PyObject *
+memoryslots_copy(PyObject *ob)
+{
+    return memoryslots_slice(ob, 0, PyTuple_GET_SIZE(ob));
+}
+
+
+PyDoc_STRVAR(memoryslots_reduce_doc, "D.__reduce__()");
+
+static PyObject *
+memoryslots_reduce(PyObject *ob)
+{
+    PyObject *args;
+    PyObject *result;
+    PyObject *tmp;
+
+    tmp = PySequence_Tuple(ob);
+    args = PyTuple_Pack(1, tmp);
+    if (args == NULL)
+        return NULL;
+
+    result = PyTuple_Pack(2, &PyMemorySlots_Type, args);
+    Py_DECREF(args);
+    return result;
+}
+
+
 static PyMethodDef memoryslots_methods[] = {
     {"__getnewargs__",          (PyCFunction)memoryslots_getnewargs,  METH_NOARGS},
         /*{"copy", (PyCFunction)memoryslots_copy, METH_NOARGS, memoryslots_copy_doc},*/
-    /*{"__copy__", (PyCFunction)memoryslots_copy, METH_NOARGS, memoryslots_copy_doc},*/
-    {"__sizeof__",      (PyCFunction)memoryslots_sizeof, METH_NOARGS, sizeof_doc},     
-    /*{"__reduce__", (PyCFunction)memoryslots_reduce, METH_NOARGS, reduce_doc},*/
+    {"__copy__", (PyCFunction)memoryslots_copy, METH_NOARGS, memoryslots_copy_doc},
+    {"__len__", (PyCFunction)memoryslots_len, METH_NOARGS, memoryslots_len_doc},
+    {"__sizeof__",      (PyCFunction)memoryslots_sizeof, METH_NOARGS, memoryslots_sizeof_doc},     
+    {"__reduce__", (PyCFunction)memoryslots_reduce, METH_NOARGS, memoryslots_reduce_doc},
     {NULL}
 };
 
@@ -659,7 +678,7 @@ static PyTypeObject PyMemorySlots_Type = {
     (inquiry)memoryslots_clear,             /* tp_clear */
     memoryslots_richcompare,                /* tp_richcompare */
     0,                                      /* tp_weaklistoffset*/
-    0,                                      /* tp_iter */
+    memoryslots_iter,                       /* tp_iter */
     0,                                      /* tp_iternext */
     memoryslots_methods,                    /* tp_methods */
     0,                                      /* tp_members */
@@ -675,6 +694,163 @@ static PyTypeObject PyMemorySlots_Type = {
     PyObject_GC_Del,                    /* tp_free */
     0                                   /* tp_is_gc */
 };
+
+/*********************** Memoryslots Iterator **************************/
+
+typedef struct {
+    PyObject_HEAD
+    Py_ssize_t it_index;
+    PyTupleObject *it_seq; /* Set to NULL when iterator is exhausted */
+} memoryslotsiterobject;
+
+static void
+memoryslotsiter_dealloc(memoryslotsiterobject *it)
+{
+    _PyObject_GC_UNTRACK(it);
+    Py_XDECREF(it->it_seq);
+    PyObject_GC_Del(it);
+}
+
+static int
+memoryslotsiter_traverse(memoryslotsiterobject *it, visitproc visit, void *arg)
+{
+    Py_VISIT(it->it_seq);
+    return 0;
+}
+
+static PyObject *
+memoryslotsiter_next(memoryslotsiterobject *it)
+{
+    PyTupleObject *seq;
+    PyObject *item;
+
+    assert(it != NULL);
+    seq = it->it_seq;
+    if (seq == NULL)
+        return NULL;
+    assert(PyTuple_Check(seq));
+
+    if (it->it_index < PyTuple_GET_SIZE(seq)) {
+        item = PyTuple_GET_ITEM(seq, it->it_index);
+        ++it->it_index;
+        Py_INCREF(item);
+        return item;
+    }
+
+    Py_DECREF(seq);
+    it->it_seq = NULL;
+    return NULL;
+}
+
+static PyObject *
+memoryslotsiter_len(memoryslotsiterobject *it)
+{
+    Py_ssize_t len = 0;
+    if (it->it_seq)
+        len = PyTuple_GET_SIZE(it->it_seq) - it->it_index;
+    return PyLong_FromSsize_t(len);
+}
+
+PyDoc_STRVAR(length_hint_doc, "Private method returning an estimate of len(list(it)).");
+
+static PyObject *
+memoryslotsiter_reduce(memoryslotsiterobject *it)
+{
+    if (it->it_seq)
+        return Py_BuildValue("N(O)n", _PyObject_GetBuiltin("iter"),
+                             it->it_seq, it->it_index);
+    else
+        return Py_BuildValue("N(())", _PyObject_GetBuiltin("iter"));
+}
+
+PyDoc_STRVAR(memoryslotsiter_reduce_doc, "D.__reduce__()");
+
+
+static PyObject *
+memoryslotsiter_setstate(memoryslotsiterobject *it, PyObject *state)
+{
+    Py_ssize_t index;
+
+#if PY_MAJOR_VERSION >= 3    
+    index = PyLong_AsSsize_t(state);
+#else
+    index = PyNumber_AsSsize_t(state, NULL);
+#endif
+    if (index == -1 && PyErr_Occurred())
+        return NULL;
+    if (it->it_seq != NULL) {
+        if (index < 0)
+            index = 0;
+        else if (index > PyTuple_GET_SIZE(it->it_seq))
+            index = PyTuple_GET_SIZE(it->it_seq); /* exhausted iterator */
+        it->it_index = index;
+    }
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(setstate_doc, "Set state information for unpickling.");
+
+
+static PyMethodDef memoryslotsiter_methods[] = {
+    {"__length_hint__", (PyCFunction)memoryslotsiter_len, METH_NOARGS, length_hint_doc},
+    {"__reduce__", (PyCFunction)memoryslotsiter_reduce, METH_NOARGS, memoryslotsiter_reduce_doc},
+    {"__setstate__", (PyCFunction)memoryslotsiter_setstate, METH_O, setstate_doc},
+    {NULL,              NULL}           /* sentinel */
+};
+
+PyTypeObject PyMemoryslotsIter_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    "memoryslots_iterator",                           /* tp_name */
+    sizeof(memoryslotsiterobject),                    /* tp_basicsize */
+    0,                                          /* tp_itemsize */
+    /* methods */
+    (destructor)memoryslotsiter_dealloc,              /* tp_dealloc */
+    0,                                          /* tp_print */
+    0,                                          /* tp_getattr */
+    0,                                          /* tp_setattr */
+    0,                                          /* tp_reserved */
+    0,                                          /* tp_repr */
+    0,                                          /* tp_as_number */
+    0,                                          /* tp_as_sequence */
+    0,                                          /* tp_as_mapping */
+    0,                                          /* tp_hash */
+    0,                                          /* tp_call */
+    0,                                          /* tp_str */
+    PyObject_GenericGetAttr,                    /* tp_getattro */
+    0,                                          /* tp_setattro */
+    0,                                          /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,/* tp_flags */
+    0,                                          /* tp_doc */
+    (traverseproc)memoryslotsiter_traverse,           /* tp_traverse */
+    0,                                          /* tp_clear */
+    0,                                          /* tp_richcompare */
+    0,                                          /* tp_weaklistoffset */
+    PyObject_SelfIter,                          /* tp_iter */
+    (iternextfunc)memoryslotsiter_next,               /* tp_iternext */
+    memoryslotsiter_methods,                          /* tp_methods */
+    0,
+};
+
+static PyObject *
+memoryslots_iter(PyObject *seq)
+{
+    memoryslotsiterobject *it;
+
+    /*
+    if (!PyMemorySlots_Check(seq)) {
+        PyErr_BadInternalCall();
+        return NULL;
+    }
+    */
+    it = PyObject_GC_New(memoryslotsiterobject, &PyMemoryslotsIter_Type);
+    if (it == NULL)
+        return NULL;
+    it->it_index = 0;
+    Py_INCREF(seq);
+    it->it_seq = (PyTupleObject *)seq;
+    _PyObject_GC_TRACK(it);
+    return (PyObject *)it;
+}
 
 struct itemgetset_object {
   PyObject_HEAD
@@ -860,6 +1036,13 @@ PyInit_memoryslots(void)
     Py_INCREF(&itemgetset_type);
 
     PyModule_AddObject(m, "itemgetset", (PyObject *)&itemgetset_type);
+    
+    if (PyType_Ready(&PyMemoryslotsIter_Type) < 0)
+        return NULL;
+    Py_INCREF(&PyMemoryslotsIter_Type);
+    
+    PyModule_AddObject(m, "memoryslotsiter", (PyObject *)&PyMemoryslotsIter_Type);
+    
 
     return m;
 }
@@ -885,6 +1068,12 @@ initmemoryslots(void)
     
     Py_INCREF(&itemgetset_type);
     PyModule_AddObject(m, "itemgetset", (PyObject *)&itemgetset_type);
+
+    if (PyType_Ready(&PyMemoryslotsIter_Type) < 0)
+        return;
+
+    Py_INCREF(&PyMemoryslotsIter_Type);
+    PyModule_AddObject(m, "memoryslotsiter", (PyObject *)&PyMemoryslotsIter_Type);
 
     return;
 }
