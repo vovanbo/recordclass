@@ -706,7 +706,7 @@ typedef struct {
 static void
 memoryslotsiter_dealloc(memoryslotsiterobject *it)
 {
-    _PyObject_GC_UNTRACK(it);
+    PyObject_GC_UnTrack(it);
     Py_XDECREF(it->it_seq);
     PyObject_GC_Del(it);
 }
@@ -848,7 +848,7 @@ memoryslots_iter(PyObject *seq)
     it->it_index = 0;
     Py_INCREF(seq);
     it->it_seq = (PyTupleObject *)seq;
-    _PyObject_GC_TRACK(it);
+    PyObject_GC_Track(it);
     return (PyObject *)it;
 }
 
