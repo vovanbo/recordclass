@@ -27,9 +27,9 @@ class {typename}(memoryslots):
         return _memoryslots.__new__(_cls, {arg_list})
 
     @classmethod
-    def _make(cls, iterable):
+    def _make(_cls, iterable):
         'Make a new {typename} object from a sequence or iterable'
-        result = _memoryslots.__new__(cls, *iterable)
+        result = _memoryslots.__new__(_cls, *iterable)
         if len(result) != {num_fields:d}:
             raise TypeError('Expected {num_fields:d} arguments, got %d' % len(result))
         return result
@@ -37,7 +37,6 @@ class {typename}(memoryslots):
     def _replace(_self, **kwds):
         'Return a new {typename} object replacing specified fields with new values'
         for name, val in kwds.items():
-            #print(name, val)
             setattr(_self, name, val)
         return _self
 
@@ -47,7 +46,7 @@ class {typename}(memoryslots):
 
     def _asdict(self):
         'Return a new OrderedDict which maps field names to their values'
-        return OrderedDict(zip(self.__class__._fields, tuple(self) ))
+        return OrderedDict(zip(self.__class__._fields, self ))
 
     __dict__ = _property(_asdict)
         
@@ -148,7 +147,7 @@ def recordclass(typename, field_names, verbose=False, rename=False, source=True)
 
     # Execute the template string in a temporary namespace and support
     # tracing utilities by setting a value for frame.f_globals['__name__']
-    namespace = dict(__name__='recorclass_%s' % typename)
+    namespace = dict(__name__='recorclass_' + typename)
     code = compile(class_definition, "", "exec")
     eval(code, namespace)
     result = namespace[typename]
