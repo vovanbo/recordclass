@@ -1,2 +1,2 @@
 #! /bin/sh
-hg push git+ssh://git@github.com/intellimath/recordarray.git
+hg push git+ssh://git@github.com/intellimath/recordclass.git
