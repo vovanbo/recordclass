@@ -23,4 +23,4 @@
 from .memoryslots import memoryslots, itemgetset
 from .record import recordclass
 
-__version__ = '0.4'
+__version__ = '0.4.2'
