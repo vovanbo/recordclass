@@ -925,6 +925,7 @@ static PyObject* itemgetset_get(PyObject *self, PyObject *obj, PyObject *type) {
 
 static int itemgetset_set(PyObject *self, PyObject *obj, PyObject *value) {
     Py_ssize_t i;
+    PyObject *v;
 
     if (value == NULL) {
         PyErr_SetString(PyExc_NotImplementedError, "__delete__");
@@ -933,8 +934,10 @@ static int itemgetset_set(PyObject *self, PyObject *obj, PyObject *value) {
     if (obj == NULL || obj == Py_None)
         return 0;
         
-    Py_INCREF(value);
     i = ((struct itemgetset_object*)self)->i;
+    v = PyTuple_GET_ITEM(obj, i);
+    Py_DECREF(v);
+    Py_INCREF(value);
     PyTuple_SET_ITEM(obj, i, value);
     return 0;
 }
