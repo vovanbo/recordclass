@@ -17,3 +17,10 @@ Main repository for ``recordclass``
 is on `bitbucket <https://bitbucket.org/intellimath/recordclass>`_.
 
 Here is also a simple `example <http://nbviewer.ipython.org/urls/bitbucket.org/intellimath/recordclass/raw/default/examples/what_is_recordclass.ipynb>`_.
+
+Changes:
+
+**0.4.2**
+
+* Fix memory leak in property getter/setter
+
