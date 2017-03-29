@@ -1,5 +1,4 @@
 """Unit tests for recordclass.py."""
-import typing
 import unittest, doctest, operator
 from recordclass import recordclass
 from collections import OrderedDict
