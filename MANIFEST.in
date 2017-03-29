@@ -1,5 +1,3 @@
-include setup.py
-
 include AUTHORS.rst
 
 include CONTRIBUTING.rst
@@ -8,12 +6,8 @@ include LICENSE
 include README.rst
 
 recursive-include tests *
+recursive-include trafaretrecord *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
 recursive-include docs *.rst conf.py Makefile make.bat *.jpg *.png *.gif
-
-include src/trafaretrecord/*.py
-include src/trafaretrecord/*.c
-include src/trafaretrecord/*.h
-include src/trafaretrecord/test/*.py
