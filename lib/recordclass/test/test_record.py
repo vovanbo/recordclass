@@ -10,9 +10,6 @@ import sys
 
 from recordclass import RecordClass
 
-_PY36 = sys.version_info[:2] >= (3, 6)
-
-
 try:
     from test import support
 except:
@@ -238,17 +235,6 @@ class RecordClassTest(unittest.TestCase):
         self.assertEqual((c.red, c.green, c.blue), (10, 20, 30))
         self.assertEqual(NTColor._fields, ('red', 'green', 'blue'))
         globals().pop('NTColor', None)          # clean-up after this test
-
-    if _PY36:
-        def test_typing(self):
-            class A(RecordClass):
-                a: int
-                b: str
-                c: typing.List[int]
-
-            tmp = A(a=1, b='1', c=[1, 2, 3])
-            self.assertEqual(repr(tmp), "A(a=1, b='1', c=[1, 2, 3])")
-            self.assertEqual(tmp._field_types, {'a': int, 'b': str, 'c': typing.List[int]})
 
 def main():
     suite = unittest.TestSuite()
