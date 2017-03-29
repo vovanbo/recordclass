@@ -3,8 +3,6 @@ from keyword import iskeyword as _iskeyword
 import re
 from typing import _type_check
 
-from .memoryslots import memoryslots
-
 _PY36 = _sys.version_info[:2] >= (3, 6)
 IDENTIFIER_REGEX = re.compile(r'^[a-z_][a-z0-9_]*$', flags=re.I)
 
@@ -14,11 +12,10 @@ def isidentifier(s):
 
 
 _class_template = """\
+from builtins import property as _property
 from collections import OrderedDict
 from trafaretrecord.memoryslots import memoryslots, itemgetset
 
-_property = property
-_tuple = tuple
 _memoryslots = memoryslots
 _itemgetset = itemgetset
 
@@ -38,7 +35,9 @@ class {typename}(memoryslots):
         'Make a new {typename} object from a sequence or iterable'
         result = _memoryslots.__new__(_cls, *iterable)
         if len(result) != {num_fields:d}:
-            raise TypeError('Expected {num_fields:d} arguments, got %d' % len(result))
+            raise TypeError(
+                'Expected {num_fields:d} arguments, got %d' % len(result)
+            )
         return result
 
     def _replace(_self, **kwds):
@@ -53,7 +52,7 @@ class {typename}(memoryslots):
 
     def _asdict(self):
         'Return a new OrderedDict which maps field names to their values'
-        return OrderedDict(zip(self.__class__._fields, self ))
+        return OrderedDict(zip(self.__class__._fields, self))
 
     __dict__ = _property(_asdict)
         
@@ -73,17 +72,7 @@ class {typename}(memoryslots):
 """
 
 _repr_template = '{name}=%r'
-
 _field_template = '    {name} = _itemgetset({index:d})'
-
-
-# _field_template = '''\
-#     def __{name}_get(self):
-#         return self[{index:d}]
-#     def __{name}_set(self, val):
-#         self[{index:d}] = val
-#     {name} = _property(__{name}_get, __{name}_set, doc='Alias for field number {index:d}')
-#     del __{name}_set, __{name}_get'''
 
 
 def trafaretrecord(typename, field_names, verbose=False, rename=False, source=True):
