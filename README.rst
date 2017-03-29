@@ -2,6 +2,14 @@
 trafaretrecord
 ==============
 
+.. image:: https://pyup.io/repos/github/vovanbo/trafaretrecord/shield.svg
+:target: https://pyup.io/repos/github/vovanbo/trafaretrecord/
+     :alt: Updates
+
+.. image:: https://pyup.io/repos/github/vovanbo/trafaretrecord/python-3-shield.svg
+:target: https://pyup.io/repos/github/vovanbo/trafaretrecord/
+     :alt: Python 3
+
 This is a fork of **recordclass** (`bitbucket <https://bitbucket.org/intellimath/recordclass>`_) by Zaur Shibzukhov.
 
 **recordclass** is `MIT Licensed <http://opensource.org/licenses/MIT>`_ python library.
