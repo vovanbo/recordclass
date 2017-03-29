@@ -4,12 +4,13 @@
 # In[ ]:
 
 from collections import namedtuple
-from recordclass import recordclass
+
+from trafaretrecord import trafaretrecord
 
 STest = namedtuple("TEST", "a b c")
 sa = STest(a=1,b=2,c=3)
 
-RTest = recordclass("RTEST", "a b c")
+RTest = trafaretrecord("RTEST", "a b c")
 ra = RTest(a=1,b=2,c=3)
 
 class Test(object):
@@ -45,7 +46,7 @@ print(timeit("z = b.c", "from __main__ import b"))
 print("Dictionary with keys a, b, c:")
 print(timeit("z = c['c']", "from __main__ import c"))
 
-print("Tuple with three values, using a constant key:")    
+print("Tuple with three values, using a constant key:")
 print(timeit("z = d[2]", "from __main__ import d"))
 
 print("List with three values, using a constant key:")

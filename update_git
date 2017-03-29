@@ -1,2 +1,0 @@
-#! /bin/sh
-hg push git+ssh://git@github.com/intellimath/recordclass.git

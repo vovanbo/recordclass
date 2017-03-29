@@ -3,12 +3,16 @@ from keyword import iskeyword as _iskeyword
 from .memoryslots import memoryslots
 import re
 
+
+IDENTIFIER_REGEX = re.compile(r'^[a-z_][a-z0-9_]*$', flags=re.I)
+
 def isidentifier(s):
-    return re.match(r'^[a-z_][a-z0-9_]*$', s, re.I) is not None
+    return re.match(IDENTIFIER_REGEX, s) is not None
+
 
 _class_template = """\
 from collections import OrderedDict
-from recordclass.memoryslots import memoryslots, itemgetset
+from trafaretrecord.memoryslots import memoryslots, itemgetset
 
 _property = property
 _tuple = tuple
@@ -69,6 +73,7 @@ _repr_template = '{name}=%r'
 
 _field_template = '    {name} = _itemgetset({index:d})'
 
+
 # _field_template = '''\
 #     def __{name}_get(self):
 #         return self[{index:d}]
@@ -77,7 +82,8 @@ _field_template = '    {name} = _itemgetset({index:d})'
 #     {name} = _property(__{name}_get, __{name}_set, doc='Alias for field number {index:d}')
 #     del __{name}_set, __{name}_get'''
 
-def recordclass(typename, field_names, verbose=False, rename=False, source=True):
+
+def trafaretrecord(typename, field_names, verbose=False, rename=False, source=True):
     """Returns a new subclass of array with named fields.
 
     >>> Point = recordarray('Point', ['x', 'y'])
@@ -135,19 +141,19 @@ def recordclass(typename, field_names, verbose=False, rename=False, source=True)
 
     # Fill-in the class template
     class_definition = _class_template.format(
-        typename = typename,
-        field_names = tuple(field_names),
-        num_fields = len(field_names),
-        arg_list = repr(tuple(field_names)).replace("'", "")[1:-1],
-        repr_fmt = ', '.join(_repr_template.format(name=name)
-                             for name in field_names),
-        field_defs = '\n'.join(_field_template.format(index=index, name=name)
-                               for index, name in enumerate(field_names))
+        typename=typename,
+        field_names=tuple(field_names),
+        num_fields=len(field_names),
+        arg_list=repr(tuple(field_names)).replace("'", "")[1:-1],
+        repr_fmt=', '.join(_repr_template.format(name=name)
+                           for name in field_names),
+        field_defs='\n'.join(_field_template.format(index=index, name=name)
+                             for index, name in enumerate(field_names))
     )
 
     # Execute the template string in a temporary namespace and support
     # tracing utilities by setting a value for frame.f_globals['__name__']
-    namespace = dict(__name__='recorclass_' + typename)
+    namespace = dict(__name__='trafaretrecord_' + typename)
     code = compile(class_definition, "", "exec")
     eval(code, namespace)
     result = namespace[typename]
@@ -166,4 +172,3 @@ def recordclass(typename, field_names, verbose=False, rename=False, source=True)
         pass
 
     return result
-
