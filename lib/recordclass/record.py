@@ -1,10 +1,16 @@
 import sys as _sys
 from keyword import iskeyword as _iskeyword
-from .memoryslots import memoryslots
 import re
+from typing import _type_check
+
+from .memoryslots import memoryslots
+
+_PY36 = _sys.version_info[:2] >= (3, 6)
+
 
 def isidentifier(s):
     return re.match(r'^[a-z_][a-z0-9_]*$', s, re.I) is not None
+
 
 _class_template = """\
 from collections import OrderedDict
@@ -77,6 +83,7 @@ _field_template = '    {name} = _itemgetset({index:d})'
 #     {name} = _property(__{name}_get, __{name}_set, doc='Alias for field number {index:d}')
 #     del __{name}_set, __{name}_get'''
 
+
 def recordclass(typename, field_names, verbose=False, rename=False, source=True):
     """Returns a new subclass of array with named fields.
 
@@ -135,19 +142,19 @@ def recordclass(typename, field_names, verbose=False, rename=False, source=True)
 
     # Fill-in the class template
     class_definition = _class_template.format(
-        typename = typename,
-        field_names = tuple(field_names),
-        num_fields = len(field_names),
-        arg_list = repr(tuple(field_names)).replace("'", "")[1:-1],
-        repr_fmt = ', '.join(_repr_template.format(name=name)
-                             for name in field_names),
-        field_defs = '\n'.join(_field_template.format(index=index, name=name)
-                               for index, name in enumerate(field_names))
+        typename=typename,
+        field_names=tuple(field_names),
+        num_fields=len(field_names),
+        arg_list=repr(tuple(field_names)).replace("'", "")[1:-1],
+        repr_fmt=', '.join(_repr_template.format(name=name)
+                           for name in field_names),
+        field_defs='\n'.join(_field_template.format(index=index, name=name)
+                             for index, name in enumerate(field_names))
     )
 
     # Execute the template string in a temporary namespace and support
     # tracing utilities by setting a value for frame.f_globals['__name__']
-    namespace = dict(__name__='recorclass_' + typename)
+    namespace = dict(__name__='recordclass_' + typename)
     code = compile(class_definition, "", "exec")
     eval(code, namespace)
     result = namespace[typename]
@@ -167,3 +174,40 @@ def recordclass(typename, field_names, verbose=False, rename=False, source=True)
 
     return result
 
+
+def _make_recordclass(name, types):
+    msg = "RecordClass('Name', [(f0, t0), (f1, t1), ...]); each t must be a type"
+    types = [(n, _type_check(t, msg)) for n, t in types]
+    rec_cls = recordclass(name, [n for n, t in types])
+    rec_cls._field_types = dict(types)
+    try:
+        rec_cls.__module__ = _sys._getframe(2).f_globals.get('__name__', '__main__')
+    except (AttributeError, ValueError):
+        pass
+    return rec_cls
+
+
+class RecordClassMeta(type):
+    def __new__(cls, typename, bases, ns):
+        if ns.get('_root', False):
+            return super().__new__(cls, typename, bases, ns)
+        if not _PY36:
+            raise TypeError("Class syntax for RecordClass is only supported"
+                            " in Python 3.6+")
+        types = ns.get('__annotations__', {})
+        return _make_recordclass(typename, types.items())
+
+
+class RecordClass(metaclass=RecordClassMeta):
+    _root = True
+
+    def __new__(self, typename, fields=None, **kwargs):
+        if kwargs and not _PY36:
+            raise TypeError("Keyword syntax for RecordClass is only supported"
+                            " in Python 3.6+")
+        if fields is None:
+            fields = kwargs.items()
+        elif kwargs:
+            raise TypeError("Either list of fields or keywords"
+                            " can be provided to RecordClass, not both")
+        return _make_recordclass(typename, fields)

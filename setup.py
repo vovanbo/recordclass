@@ -28,33 +28,33 @@ from setuptools.command.build_ext import build_ext
 from setuptools.extension import Extension
 
 ext_modules = [
-        Extension(
-            "recordclass.memoryslots",
-            ["lib/recordclass/memoryslots.c"]
-        ),
+    Extension(
+        "recordclass.memoryslots",
+        ["lib/recordclass/memoryslots.c"]
+    ),
 ]
 
 long_description = open('README.rst').read()
 
 setup(
-    name = 'recordclass',
-    version = '0.4.2',
-    description = 'Mutable variant of collections.namedtuple, which supports assignments',
-    author = 'Zaur Shibzukhov',
-    author_email = 'szport@gmail.com',
-    #maintainer = 'Zaur Shibzukhov',
-    #maintainer_email = 'szport@gmail.com',
-    license = "MIT License",
-    cmdclass = {'build_ext': build_ext},
-    ext_modules = ext_modules,
-    package_dir = {'': 'lib'},
-    packages = ['recordclass', 'recordclass.test'],
-    url = 'http://intellimath.bitbucket.org/recordclass',
-    download_url = 'https://bitbucket.org/intellimath/recordclass',
-    long_description = long_description,
-    platforms = 'Linux, Mac OS X, Windows',
-    keywords = ['namedtuple', 'record', 'struct'],
-    classifiers = [
+    name='recordclass',
+    version='0.4.2',
+    description='Mutable variant of collections.namedtuple, which supports assignments',
+    author='Zaur Shibzukhov',
+    author_email='szport@gmail.com',
+    # maintainer = 'Zaur Shibzukhov',
+    # maintainer_email = 'szport@gmail.com',
+    license="MIT License",
+    cmdclass={'build_ext': build_ext},
+    ext_modules=ext_modules,
+    package_dir={'': 'lib'},
+    packages=['recordclass', 'recordclass.test'],
+    url='http://intellimath.bitbucket.org/recordclass',
+    download_url='https://bitbucket.org/intellimath/recordclass',
+    long_description=long_description,
+    platforms='Linux, Mac OS X, Windows',
+    keywords=['namedtuple', 'record', 'struct'],
+    classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',

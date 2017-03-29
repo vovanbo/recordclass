@@ -21,6 +21,6 @@
 # THE SOFTWARE.
 
 from .memoryslots import memoryslots, itemgetset
-from .record import recordclass
+from .record import recordclass, RecordClass
 
 __version__ = '0.4.2'
