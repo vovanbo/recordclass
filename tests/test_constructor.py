@@ -273,14 +273,3 @@ def test_source():
     assert NTColor._fields == ('red', 'green', 'blue')
 
     globals().pop('NTColor', None)  # clean-up after this test
-
-
-def test_typing():
-    class A(TrafaretRecord):
-        a: int
-        b: str
-        c: typing.List[int]
-
-    tmp = A(a=1, b='1', c=[1, 2, 3])
-    assert repr(tmp) == "A(a=1, b='1', c=[1, 2, 3])"
-    assert tmp._field_types == {'a': int, 'b': str, 'c': typing.List[int]}

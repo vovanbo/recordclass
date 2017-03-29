@@ -197,7 +197,11 @@ class TrafaretRecordMeta(type):
             raise TypeError("Class syntax for TrafaretRecord is only supported"
                             " in Python 3.6+")
         types = ns.get('__annotations__', {})
-        return _make_trafaretrecord(typename, types.items())
+        klass = _make_trafaretrecord(typename, types.items())
+        for ns_item, attr in ns.items():
+            if not ns_item.startswith('__'):
+                setattr(klass, ns_item, attr)
+        return klass
 
 
 class TrafaretRecord(metaclass=TrafaretRecordMeta):
