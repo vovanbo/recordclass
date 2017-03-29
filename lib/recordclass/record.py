@@ -83,6 +83,7 @@ _field_template = '    {name} = _itemgetset({index:d})'
 #     {name} = _property(__{name}_get, __{name}_set, doc='Alias for field number {index:d}')
 #     del __{name}_set, __{name}_get'''
 
+
 def recordclass(typename, field_names, verbose=False, rename=False, source=True):
     """Returns a new subclass of array with named fields.
 
@@ -141,19 +142,19 @@ def recordclass(typename, field_names, verbose=False, rename=False, source=True)
 
     # Fill-in the class template
     class_definition = _class_template.format(
-        typename = typename,
-        field_names = tuple(field_names),
-        num_fields = len(field_names),
-        arg_list = repr(tuple(field_names)).replace("'", "")[1:-1],
-        repr_fmt = ', '.join(_repr_template.format(name=name)
-                             for name in field_names),
-        field_defs = '\n'.join(_field_template.format(index=index, name=name)
-                               for index, name in enumerate(field_names))
+        typename=typename,
+        field_names=tuple(field_names),
+        num_fields=len(field_names),
+        arg_list=repr(tuple(field_names)).replace("'", "")[1:-1],
+        repr_fmt=', '.join(_repr_template.format(name=name)
+                           for name in field_names),
+        field_defs='\n'.join(_field_template.format(index=index, name=name)
+                             for index, name in enumerate(field_names))
     )
 
     # Execute the template string in a temporary namespace and support
     # tracing utilities by setting a value for frame.f_globals['__name__']
-    namespace = dict(__name__='recorclass_' + typename)
+    namespace = dict(__name__='recordclass_' + typename)
     code = compile(class_definition, "", "exec")
     eval(code, namespace)
     result = namespace[typename]
