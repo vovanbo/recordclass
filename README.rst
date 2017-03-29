@@ -5,7 +5,7 @@ trafaretrecord
 This is a fork of **recordclass** (`bitbucket <https://bitbucket.org/intellimath/recordclass>`_) by Zaur Shibzukhov.
 
 **recordclass** is `MIT Licensed <http://opensource.org/licenses/MIT>`_ python library.
-It implements the type ``memoryslots`` and factory function ``trafaretrecord``
+It implements the type ``memoryslots`` and factory function ``recordclass``
 in order to create record-like classes.
 
 * ``memoryslots`` is ``tuple``-like type, which supports assignment operations.
