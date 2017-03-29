@@ -25,3 +25,8 @@ Changes:
 
 * Fix memory leak in property getter/setter
 
+**0.4.3**
+
+* Add support for typing for python 3.6 (patches from Vladimir Bolshakov)
+
+

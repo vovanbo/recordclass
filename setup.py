@@ -38,7 +38,7 @@ long_description = open('README.rst').read()
 
 setup(
     name='recordclass',
-    version='0.4.2',
+    version='0.4.3',
     description='Mutable variant of collections.namedtuple, which supports assignments',
     author='Zaur Shibzukhov',
     author_email='szport@gmail.com',
