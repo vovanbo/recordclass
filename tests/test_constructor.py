@@ -3,10 +3,11 @@
 import pickle, copy
 import keyword
 import re
+import typing
 
 import pytest
 
-from trafaretrecord import trafaretrecord
+from trafaretrecord import trafaretrecord, TrafaretRecord
 
 try:
     from test import support
@@ -245,7 +246,7 @@ def test_name_conflicts():
     # test _fields
     assert T._fields == tuple(words)
     # test __getnewargs__
-    # self.assertEqual(t.__getnewargs__(), newvalues)
+    assert t.__getnewargs__() == newvalues
 
 
 def test_repr():
@@ -272,3 +273,14 @@ def test_source():
     assert NTColor._fields == ('red', 'green', 'blue')
 
     globals().pop('NTColor', None)  # clean-up after this test
+
+
+def test_typing():
+    class A(TrafaretRecord):
+        a: int
+        b: str
+        c: typing.List[int]
+
+    tmp = A(a=1, b='1', c=[1, 2, 3])
+    assert repr(tmp) == "A(a=1, b='1', c=[1, 2, 3])"
+    assert tmp._field_types == {'a': int, 'b': str, 'c': typing.List[int]}

@@ -5,4 +5,4 @@ __email__ = 'vovanbo@gmail.com'
 __version__ = '0.1.0'
 
 from .memoryslots import memoryslots, itemgetset
-from .constructor import trafaretrecord
+from .constructor import trafaretrecord, TrafaretRecord

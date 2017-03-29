@@ -1,10 +1,13 @@
 import sys as _sys
 from keyword import iskeyword as _iskeyword
-from .memoryslots import memoryslots
 import re
+from typing import _type_check
 
+from .memoryslots import memoryslots
 
+_PY36 = _sys.version_info[:2] >= (3, 6)
 IDENTIFIER_REGEX = re.compile(r'^[a-z_][a-z0-9_]*$', flags=re.I)
+
 
 def isidentifier(s):
     return re.match(IDENTIFIER_REGEX, s) is not None
@@ -86,7 +89,7 @@ _field_template = '    {name} = _itemgetset({index:d})'
 def trafaretrecord(typename, field_names, verbose=False, rename=False, source=True):
     """Returns a new subclass of array with named fields.
 
-    >>> Point = recordarray('Point', ['x', 'y'])
+    >>> Point = trafaretrecord('Point', ['x', 'y'])
     >>> Point.__doc__                   # docstring for the new class
     'Point(x, y)'
     >>> p = Point(11, y=22)             # instantiate with positional args or keywords
@@ -172,3 +175,41 @@ def trafaretrecord(typename, field_names, verbose=False, rename=False, source=Tr
         pass
 
     return result
+
+
+def _make_trafaretrecord(name, types):
+    msg = "TrafaretRecord('Name', [(f0, t0), (f1, t1), ...]); each t must be a type"
+    types = [(n, _type_check(t, msg)) for n, t in types]
+    rec_cls = trafaretrecord(name, [n for n, t in types])
+    rec_cls._field_types = dict(types)
+    try:
+        rec_cls.__module__ = _sys._getframe(2).f_globals.get('__name__', '__main__')
+    except (AttributeError, ValueError):
+        pass
+    return rec_cls
+
+
+class TrafaretRecordMeta(type):
+    def __new__(cls, typename, bases, ns):
+        if ns.get('_root', False):
+            return super().__new__(cls, typename, bases, ns)
+        if not _PY36:
+            raise TypeError("Class syntax for TrafaretRecord is only supported"
+                            " in Python 3.6+")
+        types = ns.get('__annotations__', {})
+        return _make_trafaretrecord(typename, types.items())
+
+
+class TrafaretRecord(metaclass=TrafaretRecordMeta):
+    _root = True
+
+    def __new__(self, typename, fields=None, **kwargs):
+        if kwargs and not _PY36:
+            raise TypeError("Keyword syntax for TrafaretRecord is only supported"
+                            " in Python 3.6+")
+        if fields is None:
+            fields = kwargs.items()
+        elif kwargs:
+            raise TypeError("Either list of fields or keywords"
+                            " can be provided to TrafaretRecord, not both")
+        return _make_trafaretrecord(typename, fields)
