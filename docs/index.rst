@@ -1,5 +1,5 @@
 Welcome to trafaretrecord's documentation!
-======================================
+==========================================
 
 Contents:
 
