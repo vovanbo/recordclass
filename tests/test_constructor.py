@@ -1,13 +1,13 @@
 """Unit tests for recordclass.py."""
 
-import pickle, copy
+import copy
 import keyword
+import pickle
 import re
-import typing
 
 import pytest
 
-from trafaretrecord import trafaretrecord, TrafaretRecord
+from trafaretrecord import trafaretrecord
 
 try:
     from test import support

@@ -8,7 +8,7 @@ from setuptools.extension import Extension
 ext_modules = [
     Extension(
         "trafaretrecord.memoryslots",
-        ["trafaretrecord/memoryslots.c"]
+        ["src/trafaretrecord/memoryslots.c"]
     ),
 ]
 
@@ -38,7 +38,7 @@ setup(
     packages=[
         'trafaretrecord',
     ],
-    package_dir={'trafaretrecord': 'trafaretrecord'},
+    package_dir={'': 'src'},
     include_package_data=True,
     install_requires=requirements,
     license="MIT License",
