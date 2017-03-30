@@ -24,6 +24,10 @@ def test_class_properties():
         def B(self):
             return self.b.upper()
 
+        @B.setter
+        def B(self, value):
+            self._replace(b=value.lower())
+
         @staticmethod
         def static():
             return 'static method result'
@@ -35,6 +39,9 @@ def test_class_properties():
     tmp = A(a=1, b='b', c=[1, 2, 3])
     assert tmp.b == 'b'
     assert tmp.B == 'B'
+    tmp.B = 'BB'
+    assert tmp.b == 'bb'
+    assert tmp.B == 'BB'
     assert tmp.static() == 'static method result'
     assert A.initialize(a=3, b='B', c=[4, 5, 6]) == A(a=3, b='B', c=[4, 5, 6])
 
