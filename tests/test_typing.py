@@ -46,7 +46,7 @@ def test_class_properties():
     assert A.initialize(a=3, b='B', c=[4, 5, 6]) == A(a=3, b='B', c=[4, 5, 6])
 
 
-def test_field_defalts():
+def test_field_defaults():
     class A(TrafaretRecord):
         a: int = 1
         b: str = 'b'
