@@ -1,7 +1,7 @@
 import sys as _sys
 from keyword import iskeyword as _iskeyword
 import re
-from typing import _type_check
+from typing import _type_check, _prohibited, _special
 
 _PY36 = _sys.version_info[:2] >= (3, 6)
 IDENTIFIER_REGEX = re.compile(r'^[a-z_][a-z0-9_]*$', flags=re.I)
@@ -166,6 +166,8 @@ def trafaretrecord(typename, field_names, verbose=False, rename=False, source=Tr
     return result
 
 
+# The below code is almost the same as https://github.com/python/typing/blob/master/src/typing.py#L2060-L2154
+
 def _make_trafaretrecord(name, types):
     msg = "TrafaretRecord('Name', [(f0, t0), (f1, t1), ...]); each t must be a type"
     types = [(n, _type_check(t, msg)) for n, t in types]
@@ -187,9 +189,28 @@ class TrafaretRecordMeta(type):
                             " in Python 3.6+")
         types = ns.get('__annotations__', {})
         klass = _make_trafaretrecord(typename, types.items())
-        for ns_item, attr in ns.items():
-            if not ns_item.startswith('__'):
-                setattr(klass, ns_item, attr)
+
+        defaults = []
+        defaults_dict = {}
+        for field_name in types:
+            if field_name in ns:
+                default_value = ns[field_name]
+                defaults.append(default_value)
+                defaults_dict[field_name] = default_value
+            elif defaults:
+                raise TypeError("Non-default trafaretrecord field {field_name} cannot "
+                                "follow default field(s) {default_names}"
+                                .format(field_name=field_name,
+                                        default_names=', '.join(defaults_dict.keys())))
+        klass.__new__.__defaults__ = tuple(defaults)
+        klass._field_defaults = defaults_dict
+        # update from user namespace without overriding special trafaretrecord attributes
+        for key in ns:
+            if key in _prohibited:
+                raise AttributeError("Cannot overwrite TrafaretRecordMeta attribute " + key)
+            elif key not in _special and key not in klass._fields:
+                setattr(klass, key, ns[key])
+
         return klass
 
 

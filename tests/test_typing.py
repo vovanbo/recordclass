@@ -45,3 +45,17 @@ def test_class_properties():
     assert tmp.static() == 'static method result'
     assert A.initialize(a=3, b='B', c=[4, 5, 6]) == A(a=3, b='B', c=[4, 5, 6])
 
+
+def test_field_defalts():
+    class A(TrafaretRecord):
+        a: int = 1
+        b: str = 'b'
+        c: typing.List[typing.Any] = [1, 'a', (123, 456)]
+
+    tmp = A()
+    assert tmp == A(a=1, b='b', c=[1, 'a', (123, 456)])
+
+    tmp.a = 2
+    tmp.b = 'B'
+    tmp.c = [1, 2, 3]
+    assert tmp == A(a=2, b='B', c=[1, 2, 3])
