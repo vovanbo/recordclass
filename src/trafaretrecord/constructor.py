@@ -1,10 +1,17 @@
 import sys as _sys
 from keyword import iskeyword as _iskeyword
 import re
-from typing import _type_check, _prohibited, _special
+from typing import _type_check
 
 _PY36 = _sys.version_info[:2] >= (3, 6)
 IDENTIFIER_REGEX = re.compile(r'^[a-z_][a-z0-9_]*$', flags=re.I)
+
+# attributes prohibited to set in TrafaretRecord class syntax
+_prohibited = ('__new__', '__init__', '__slots__', '__getnewargs__',
+               '_fields', '_field_defaults', '_field_types',
+               '_make', '_replace', '_asdict')
+
+_special = ('__module__', '__name__', '__qualname__', '__annotations__')
 
 
 def isidentifier(s):
