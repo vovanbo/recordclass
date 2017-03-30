@@ -53,6 +53,8 @@ def test_field_defalts():
         c: typing.List[typing.Any] = [1, 'a', (123, 456)]
 
     tmp = A()
+    assert tmp._field_types == {'a': int, 'b': str, 'c': typing.List[typing.Any]}
+    assert tmp._field_defaults == {'a': 1, 'b': 'b', 'c': [1, 'a', (123, 456)]}
     assert tmp == A(a=1, b='b', c=[1, 'a', (123, 456)])
 
     tmp.a = 2
