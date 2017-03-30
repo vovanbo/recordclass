@@ -3,7 +3,7 @@ trafaretrecord
 ==============
 
 .. image:: https://img.shields.io/travis/vovanbo/trafaretclass.svg
-        :target: https://travis-ci.org/vovanbo/trafaretclass
+        :target: https://travis-ci.org/vovanbo/trafaretrecord
 
 .. image:: https://pyup.io/repos/github/vovanbo/trafaretrecord/shield.svg
         :target: https://pyup.io/repos/github/vovanbo/trafaretrecord/
