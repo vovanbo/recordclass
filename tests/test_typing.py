@@ -61,3 +61,18 @@ def test_field_defaults():
     tmp.b = 'B'
     tmp.c = [1, 2, 3]
     assert tmp == A(a=2, b='B', c=[1, 2, 3])
+
+
+def test_typing_self():
+    AnyTrafaret = typing.Type[TrafaretRecord]
+
+    class A(TrafaretRecord):
+        same: typing.Type['A']
+        many: typing.Sequence[AnyTrafaret]
+
+    the_same = A(same=123, many=[])
+    tmp = A(same=the_same, many=[the_same, the_same])
+    assert tmp._field_types == {'same': typing.Type['A'], 'many': typing.Sequence[AnyTrafaret]}
+    assert tmp.same == the_same
+    assert tmp.many == [the_same, the_same]
+    assert tmp._field_types['same']._subs_tree()[1]._eval_type(globals(), locals()) == A
