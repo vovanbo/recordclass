@@ -113,16 +113,10 @@ memoryslots_getnewargs(PyObject *ob)
 }
 
 static int
-memoryslots_init(PyObject *self, PyObject *args, PyObject *kw)
-{
-    return 0;
-}
-
-static int
 memoryslots_clear(PyTupleObject *op)
 {
     Py_ssize_t i;
-    Py_ssize_t len = PyTuple_GET_SIZE(op);
+    Py_ssize_t len = Py_ssize_tSIZE(op);
     
     if (len > 0) {
         i = len;
@@ -136,7 +130,7 @@ static void
 memoryslots_dealloc(PyTupleObject *op)
 {
     Py_ssize_t i;
-    Py_ssize_t len = PyTuple_GET_SIZE(op);
+    Py_ssize_t len = Py_SIZE(op);
     
     PyObject_GC_UnTrack(op);
     /*Py_TRASHCAN_SAFE_BEGIN(op);  */
@@ -697,7 +691,7 @@ static PyTypeObject PyMemorySlots_Type = {
     0,                                      /* tp_descr_get */
     0,                                      /* tp_descr_set */
     0,                                      /* tp_memoryslotsoffset */
-    memoryslots_init,                       /* tp_init */
+    0,                                      /* tp_init */
     0,                /* tp_alloc */
     memoryslots_new,                                  /* tp_new */
     PyObject_GC_Del,                    /* tp_free */
