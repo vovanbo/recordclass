@@ -67,6 +67,9 @@ memoryslots_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         PyObject *item;
         
         tmp = (PyTupleObject*)PySequence_Tuple(args);
+        if (tmp == NULL)
+            return NULL;
+        
         n = PyTuple_GET_SIZE(tmp);
         
         if (type == &PyMemorySlots_Type)
@@ -106,7 +109,7 @@ memoryslots_getnewargs(PyObject *ob)
         }
     }
     return res;
-
+    
 }
 
 static int
@@ -119,26 +122,32 @@ static int
 memoryslots_clear(PyTupleObject *op)
 {
     Py_ssize_t i;
-    Py_ssize_t len =  PyTuple_GET_SIZE(op);
+    Py_ssize_t len = PyTuple_GET_SIZE(op);
     
-    PyObject_GC_UnTrack(op);
-    /*Py_TRASHCAN_SAFE_BEGIN(op)*/
     if (len > 0) {
         i = len;
         while (--i >= 0)
-            Py_XDECREF(op->ob_item[i]);
+            Py_CLEAR(op->ob_item[i]);
     }
-    /*Py_TRASHCAN_SAFE_END(op)*/
-
-    /* Never fails; the return value can be ignored.
-       Note that there is no guarantee that the list is actually empty
-       at this point, because XDECREF may have populated it again! */
+    
     return 0;
 }
 static void
 memoryslots_dealloc(PyTupleObject *op)
 {
+    Py_ssize_t i;
+    Py_ssize_t len = PyTuple_GET_SIZE(op);
+    
+    PyObject_GC_UnTrack(op);
+    /*Py_TRASHCAN_SAFE_BEGIN(op);  */
+    if (len > 0) {
+        i = len;
+        while (--i >= 0)
+            Py_XDECREF(op->ob_item[i]);
+    }
+    
     Py_TYPE(op)->tp_free((PyObject *)op);
+    /*Py_TRASHCAN_SAFE_END(op);*/
 }
 
 static int
