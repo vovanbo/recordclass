@@ -809,7 +809,7 @@ static PyMethodDef memoryslotsiter_methods[] = {
 
 PyTypeObject PyMemoryslotsIter_Type = {
     PyVarObject_HEAD_INIT(DEFERRED_ADDRESS(&PyType_Type), 0)
-    "memoryslots_iterator",                           /* tp_name */
+    "recordclass.memoryslots.memoryslots_iterator",                           /* tp_name */
     sizeof(memoryslotsiterobject),                    /* tp_basicsize */
     0,                                          /* tp_itemsize */
     /* methods */
@@ -945,7 +945,7 @@ static int itemgetset_set(PyObject *self, PyObject *obj, PyObject *value) {
         
     i = ((struct itemgetset_object*)self)->i;
     v = PyTuple_GET_ITEM(obj, i);
-    Py_DECREF(v);
+    Py_XDECREF(v);
     Py_INCREF(value);
     PyTuple_SET_ITEM(obj, i, value);
     return 0;
