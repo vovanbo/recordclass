@@ -36,7 +36,7 @@ requests==2.13.0          # via sphinx
 six==1.10.0               # via cryptography, packaging, setuptools, sphinx
 snowballstemmer==1.2.1    # via sphinx
 sphinx==1.5.5
-tox==2.6.0
+tox==2.7.0
 virtualenv==15.1.0        # via tox
 watchdog==0.8.3
 wheel==0.29.0
