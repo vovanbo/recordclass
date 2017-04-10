@@ -27,6 +27,6 @@ del _sys
 from .memoryslots import memoryslots, itemgetset
 from .record import recordclass
 if _PY36:
-    from .record.typing import RecordClass
+    from .typing import RecordClass
 
 __version__ = '0.4.3'

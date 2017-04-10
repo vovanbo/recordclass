@@ -6,6 +6,7 @@ from .memoryslots import memoryslots
 def isidentifier(s):
     return re.match(r'^[a-z_][a-z0-9_]*$', s, re.I) is not None
 
+import sys as _sys
 
 _class_template = """\
 from collections import OrderedDict

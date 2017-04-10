@@ -42,6 +42,7 @@ long_description = open('README.rst').read()
 packages=['recordclass', 'recordclass.test']
 if _PY36:
     packages.append('recordclass.test.typing')
+    packages.append('recordclass.typing')
 
 setup(
     name='recordclass',

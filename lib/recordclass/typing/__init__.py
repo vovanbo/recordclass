@@ -1,6 +1,8 @@
 from recordclass.record import recordclass
 from typing import _type_check
 
+import sys as _sys
+
 def _make_recordclass(name, types):
     msg = "RecordClass('Name', [(f0, t0), (f1, t1), ...]); each t must be a type"
     types = [(n, _type_check(t, msg)) for n, t in types]
