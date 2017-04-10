@@ -20,7 +20,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import sys as _sys
+_PY36 = _sys.version_info[:2] >= (3, 6)
+del _sys
+
 from .memoryslots import memoryslots, itemgetset
-from .record import recordclass, RecordClass
+from .record import recordclass
+if _PY36:
+    from .record.typing import RecordClass
 
 __version__ = '0.4.3'

@@ -23,6 +23,9 @@
 # THE SOFTWARE.
 #
 
+import sys as _sys
+_PY36 = _sys.version_info[:2] >= (3, 6)
+
 from setuptools import setup
 from setuptools.command.build_ext import build_ext
 from setuptools.extension import Extension
@@ -36,6 +39,10 @@ ext_modules = [
 
 long_description = open('README.rst').read()
 
+packages=['recordclass', 'recordclass.test']
+if _PY36:
+    packages.append('recordclass.test.typing')
+
 setup(
     name='recordclass',
     version='0.4.3',
@@ -48,7 +55,7 @@ setup(
     cmdclass={'build_ext': build_ext},
     ext_modules=ext_modules,
     package_dir={'': 'lib'},
-    packages=['recordclass', 'recordclass.test'],
+    packages=packages,
     url='http://intellimath.bitbucket.org/recordclass',
     download_url='https://bitbucket.org/intellimath/recordclass',
     long_description=long_description,
