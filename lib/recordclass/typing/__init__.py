@@ -14,7 +14,6 @@ def _make_recordclass(name, types):
         pass
     return rec_cls
 
-
 class RecordClassMeta(type):
     def __new__(cls, typename, bases, ns):
         if ns.get('_root', False):
