@@ -52,112 +52,110 @@ PyMemorySlots_New(Py_ssize_t size)
         for (i=0; i < size; i++)
             op->ob_item[i] = NULL;
     }
+
     PyObject_GC_Track(op);
     
     return (PyObject*)op;
 }
 
-
 static PyObject *
 memoryslots_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
+    PyTupleObject *tmp; 
+    PyMemorySlotsObject *newobj;
+    Py_ssize_t i, n;
+    PyObject *item;
 
     if (args == NULL)
         return PyMemorySlots_New(0);
-    else {
-        PyTupleObject *tmp, *newobj;
-        Py_ssize_t i, n;
-        PyObject *item;
-        
-        tmp = (PyTupleObject*)PySequence_Tuple(args);
-        if (tmp == NULL)
-            return NULL;
-        
-        n = PyTuple_GET_SIZE(tmp);
-        
-        if (type == &PyMemorySlots_Type) {
-            newobj = (PyTupleObject*)PyMemorySlots_New(n);
-        } else {   
-            newobj = (PyTupleObject*)(type->tp_alloc(type, n));
-        }
-        
-        if (newobj == NULL)
-            return NULL;
-            
-        if (n > 0) {
-            for(i = 0; i < n; i++) {
-                item = PyTuple_GET_ITEM(tmp, i);
-                Py_INCREF(item);
-                PyTuple_SET_ITEM(newobj, i, item);
-            }
-        }
-        Py_DECREF(tmp);
-        return (PyObject*)newobj;
+
+    tmp = (PyTupleObject*)PySequence_Tuple(args);
+    if (tmp == NULL)
+        return NULL;
+
+    n = PyTuple_GET_SIZE(tmp);
+
+    if (type == &PyMemorySlots_Type) {
+        newobj = (PyMemorySlotsObject*)PyMemorySlots_New(n);
+    } else {
+        assert(PyType_IsSubtype(type, &PyMemorySlots_Type));
+        newobj = (PyMemorySlotsObject*)(type->tp_alloc(type, n));
     }
+
+    if (newobj == NULL) {
+        Py_DECREF(tmp);
+        return NULL;
+    }
+
+    if (n > 0) {
+        for(i = 0; i < n; i++) {
+            item = PyTuple_GET_ITEM(tmp, i);
+            newobj->ob_item[i] = item;
+            Py_INCREF(item);
+        }
+    }
+
+    Py_DECREF(tmp);
+    return (PyObject*)newobj;
 }
 
 static PyObject *
 memoryslots_getnewargs(PyObject *ob)
 {
-    PyObject *v, *res;
-    Py_ssize_t i, n;
+    PyObject *v;
+    PyTupleObject *res;
+    PyMemorySlotsObject *obj = (PyMemorySlotsObject*)ob;
+    Py_ssize_t i, n = Py_SIZE(ob);
 
-    n = PyTuple_GET_SIZE(ob);
-    res = PyTuple_New(n);
+    res = (PyTupleObject*)PyTuple_New(n);
+
     if (res == NULL)
         return NULL;
+
     if (n > 0) {
         for (i=0; i<n; i++) {
-            v = PyTuple_GET_ITEM(ob, i);
+            v = obj->ob_item[i];
+            res->ob_item[i] = v;
             Py_INCREF(v);
-            PyTuple_SET_ITEM(res, i, v);
         }
     }
-    return res;
-    
-}
 
-/*
-static int
-memoryslots_clear(PyTupleObject *op)
-{
-    Py_ssize_t i;
-    Py_ssize_t len = Py_SIZE(op);
-    
-    if (len > 0) {
-        i = len;
-        while (--i >= 0)
-            Py_CLEAR(op->ob_item[i]);
-    }
-    
-    return 0;
+    return (PyObject*)res;
 }
-*/
 
 static void
-memoryslots_dealloc(PyTupleObject *op)
+memoryslots_clear(PyMemorySlotsObject *op)
 {
     Py_ssize_t i;
-    Py_ssize_t len = Py_SIZE(op);
-    
-    PyObject_GC_UnTrack(op);
-    if (len > 0) {
-        i = len;
-        while (--i >= 0) {
-            Py_CLEAR(op->ob_item[i]);
-        }
+
+    for (i = Py_SIZE(op); --i >= 0; ) {
+        Py_CLEAR(op->ob_item[i]);
     }
-    
+}
+
+static void
+memoryslots_dealloc(PyMemorySlotsObject *op)
+{
+    Py_ssize_t i;
+
+    PyObject_GC_UnTrack(op);
+    /*Py_TRASHCAN_SAFE_BEGIN(op)*/
+    for (i = Py_SIZE(op); --i >= 0; ) {
+        Py_CLEAR(op->ob_item[i]);
+    }
+
     Py_TYPE(op)->tp_free((PyObject *)op);
+    /*Py_TRASHCAN_SAFE_END(op)*/
 }
 
 static int
-memoryslots_traverse(PyTupleObject *o, visitproc visit, void *arg)
+memoryslots_traverse(PyMemorySlotsObject *o, visitproc visit, void *arg)
 {
     Py_ssize_t i;
 
-    for (i = PyTuple_GET_SIZE(o); --i >= 0; )
+    for (i = Py_SIZE(o); --i >= 0; ) {
         Py_VISIT(o->ob_item[i]);
+    }
     return 0;
 }
 
@@ -257,8 +255,7 @@ memoryslots_concat(PyTupleObject *a, PyObject *bb)
 }
 
 static PyObject *
-memoryslots_slice(PyObject *a, Py_ssize_t ilow,
-           Py_ssize_t ihigh)
+memoryslots_slice(PyObject *a, Py_ssize_t ilow, Py_ssize_t ihigh)
 {
 #define aa ((PyTupleObject*)a)
     PyTupleObject *np;
@@ -305,7 +302,7 @@ memoryslots_ass_slice(PyObject *a, Py_ssize_t ilow, Py_ssize_t ihigh, PyObject *
     PyObject **item;
     PyObject **vitem = NULL;
     PyObject *v_as_SF = NULL; /* PySequence_Fast(v) */
-    Py_ssize_t n; /* # of elements in replacement list */
+    Py_ssize_t n;
     Py_ssize_t k;
     int result = -1;
     
@@ -500,20 +497,20 @@ PyDoc_STRVAR(memoryslots_len_doc,
 "T.__len__() -- len of T");
 
 static Py_ssize_t
-memoryslots_len(PyTupleObject *self)
+memoryslots_len(PyMemorySlotsObject *self)
 {
-    return PyTuple_GET_SIZE(self);
+    return Py_SIZE(self);
 }
 
 PyDoc_STRVAR(memoryslots_sizeof_doc,
 "T.__sizeof__() -- size of T in memory, in bytes");
 
 static PyObject *
-memoryslots_sizeof(PyTupleObject *self)
+memoryslots_sizeof(PyMemorySlotsObject *self)
 {
     Py_ssize_t res;
 
-    res = PyTuple_Type.tp_basicsize + Py_SIZE(self) * sizeof(PyObject *);
+    res = PyMemorySlots_Type.tp_basicsize + Py_SIZE(self) * sizeof(PyObject*);
     return PyLong_FromSsize_t(res);
 }
 
@@ -591,15 +588,15 @@ memoryslots_richcompare(PyObject *v, PyObject *w, int op)
 }
 
 static PySequenceMethods memoryslots_as_sequence = {
-    (lenfunc)memoryslots_len,                       /* sq_length */
+    (lenfunc)memoryslots_len,                          /* sq_length */
     (binaryfunc)memoryslots_concat,                    /* sq_concat */
     (ssizeargfunc)memoryslots_repeat,                  /* sq_repeat */
     (ssizeargfunc)memoryslots_item,                    /* sq_item */
-    0,                                          /* sq_slice */
+    0,                                                 /* sq_slice */
     (ssizeobjargproc)memoryslots_ass_item,             /* sq_ass_item */
-    0,             /* sq_ass_item */
-    0,                                          /* sq_ass_slice */
-    0,                  /* sq_contains */
+    0,                                                 /* sq_ass_item */
+    0,                                                 /* sq_ass_slice */
+    0,                                                 /* sq_contains */
 };
 
 static PyMappingMethods memoryslots_as_mapping = {
@@ -656,15 +653,11 @@ static PyMemberDef memoryslots_members[] = {
 };
 */
 
-
-/* See comment in xxsubtype.c */
-/*#define DEFERRED_ADDRESS(ADDR) 0*/
-
 static PyTypeObject PyMemorySlots_Type = {
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
     "recordclass.memoryslots.memoryslots",          /* tp_name */
-    sizeof(PyTupleObject) - sizeof(PyObject *),              /* tp_basicsize */
-    sizeof(PyObject *),                                  /* tp_itemsize */
+    sizeof(PyMemorySlotsObject) - sizeof(PyObject*),      /* tp_basicsize */
+    sizeof(PyObject*),                              /* tp_itemsize */
     /* methods */
     (destructor)memoryslots_dealloc,        /* tp_dealloc */
     0,                                      /* tp_print */
@@ -681,11 +674,11 @@ static PyTypeObject PyMemorySlots_Type = {
     PyObject_GenericGetAttr,                /* tp_getattro */
     PyObject_GenericSetAttr,                /* tp_setattro */
     0,                                      /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC |
-    Py_TPFLAGS_BASETYPE,                    /* tp_flags */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,
+                                            /* tp_flags */
     memoryslots_doc,                        /* tp_doc */
     (traverseproc)memoryslots_traverse,     /* tp_traverse */
-    0,                                      /* tp_clear */
+    (inquiry)memoryslots_clear,             /* tp_clear */
     memoryslots_richcompare,                /* tp_richcompare */
     0,                                      /* tp_weaklistoffset*/
     memoryslots_iter,                       /* tp_iter */
