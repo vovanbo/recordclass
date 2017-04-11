@@ -36,13 +36,13 @@ typedef PyTupleObject PyMemorySlotsObject;
 PyObject *
 PyMemorySlots_New(Py_ssize_t size)
 {
-    PyTupleObject *op;
+    PyMemorySlotsObject *op;
     Py_ssize_t i;
     
     if (size < 0) {
         PyErr_BadInternalCall();
         return NULL;
-    };
+    }
         
     op = PyObject_GC_NewVar(PyMemorySlotsObject, &PyMemorySlots_Type, size);
     if (op == NULL)
@@ -100,11 +100,10 @@ memoryslots_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 }
 
 static PyObject *
-memoryslots_getnewargs(PyObject *ob)
+memoryslots_getnewargs(PyMemorySlotsObject *ob)
 {
     PyObject *v;
     PyTupleObject *res;
-    PyMemorySlotsObject *obj = (PyMemorySlotsObject*)ob;
     Py_ssize_t i, n = Py_SIZE(ob);
 
     res = (PyTupleObject*)PyTuple_New(n);
@@ -114,7 +113,7 @@ memoryslots_getnewargs(PyObject *ob)
 
     if (n > 0) {
         for (i=0; i<n; i++) {
-            v = obj->ob_item[i];
+            v = ob->ob_item[i];
             res->ob_item[i] = v;
             Py_INCREF(v);
         }
@@ -139,13 +138,11 @@ memoryslots_dealloc(PyMemorySlotsObject *op)
     Py_ssize_t i;
 
     PyObject_GC_UnTrack(op);
-    /*Py_TRASHCAN_SAFE_BEGIN(op)*/
     for (i = Py_SIZE(op); --i >= 0; ) {
         Py_CLEAR(op->ob_item[i]);
     }
 
     Py_TYPE(op)->tp_free((PyObject *)op);
-    /*Py_TRASHCAN_SAFE_END(op)*/
 }
 
 static int
@@ -1032,21 +1029,21 @@ PyInit_memoryslots(void)
         return NULL;
 
     if (PyType_Ready(&PyMemorySlots_Type) < 0)
-        return NULL;
+        Py_FatalError("Can't initialize memoryslots type");
+    
     Py_INCREF(&PyMemorySlots_Type);
-
     PyModule_AddObject(m, "memoryslots", (PyObject *)&PyMemorySlots_Type);
 
     if (PyType_Ready(&itemgetset_type) < 0)
-        return NULL;
-    Py_INCREF(&itemgetset_type);
+        Py_FatalError("Can't initialize itemgetset type");
 
+    Py_INCREF(&itemgetset_type);
     PyModule_AddObject(m, "itemgetset", (PyObject *)&itemgetset_type);
     
     if (PyType_Ready(&PyMemoryslotsIter_Type) < 0)
-        return NULL;
-    Py_INCREF(&PyMemoryslotsIter_Type);
-    
+        Py_FatalError("Can't initialize memoryslots iter type");
+
+    Py_INCREF(&PyMemoryslotsIter_Type);    
     PyModule_AddObject(m, "memoryslotsiter", (PyObject *)&PyMemoryslotsIter_Type);
     
 
@@ -1064,19 +1061,19 @@ initmemoryslots(void)
     Py_XINCREF(m);
 
     if (PyType_Ready(&PyMemorySlots_Type) < 0)
-        return;
+         Py_FatalError("Can't initialize memoryslots type");
 
     Py_INCREF(&PyMemorySlots_Type);
     PyModule_AddObject(m, "memoryslots", (PyObject *)&PyMemorySlots_Type);
 
     if (PyType_Ready(&itemgetset_type) < 0)
-        return;
+        Py_FatalError("Can't initialize itemgetset type");
     
     Py_INCREF(&itemgetset_type);
     PyModule_AddObject(m, "itemgetset", (PyObject *)&itemgetset_type);
 
     if (PyType_Ready(&PyMemoryslotsIter_Type) < 0)
-        return;
+        Py_FatalError("Can't initialize memoryslots iter type");
 
     Py_INCREF(&PyMemoryslotsIter_Type);
     PyModule_AddObject(m, "memoryslotsiter", (PyObject *)&PyMemoryslotsIter_Type);
