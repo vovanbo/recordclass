@@ -122,7 +122,7 @@ memoryslots_getnewargs(PyMemorySlotsObject *ob)
     return (PyObject*)res;
 }
 
-static void
+static int
 memoryslots_clear(PyMemorySlotsObject *op)
 {
     Py_ssize_t i;
@@ -130,6 +130,7 @@ memoryslots_clear(PyMemorySlotsObject *op)
     for (i = Py_SIZE(op); --i >= 0; ) {
         Py_CLEAR(op->ob_item[i]);
     }
+    return 0;
 }
 
 static void
@@ -718,6 +719,13 @@ memoryslotsiter_traverse(memoryslotsiterobject *it, visitproc visit, void *arg)
     return 0;
 }
 
+static int
+memoryslotsiter_clear(memoryslotsiterobject *it)
+{
+    Py_CLEAR(it->it_seq);
+    return 0;
+}
+
 static PyObject *
 memoryslotsiter_next(memoryslotsiterobject *it)
 {
@@ -819,15 +827,15 @@ PyTypeObject PyMemorySlotsIter_Type = {
     PyObject_GenericGetAttr,                    /* tp_getattro */
     0,                                          /* tp_setattro */
     0,                                          /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,/* tp_flags */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,    /* tp_flags */
     0,                                          /* tp_doc */
-    (traverseproc)memoryslotsiter_traverse,           /* tp_traverse */
-    0,                                          /* tp_clear */
+    (traverseproc)memoryslotsiter_traverse,     /* tp_traverse */
+    (inquiry)memoryslotsiter_clear,             /* tp_clear */
     0,                                          /* tp_richcompare */
     0,                                          /* tp_weaklistoffset */
     PyObject_SelfIter,                          /* tp_iter */
-    (iternextfunc)memoryslotsiter_next,               /* tp_iternext */
-    memoryslotsiter_methods,                          /* tp_methods */
+    (iternextfunc)memoryslotsiter_next,         /* tp_iternext */
+    memoryslotsiter_methods,                    /* tp_methods */
     0,
 };
 
@@ -877,7 +885,6 @@ static PyObject* itemgetset_new(PyTypeObject *t, PyObject *args, PyObject *k) {
     ((struct itemgetset_object*)ob)->i = i;
     return ob;
 }
-
 
 static void itemgetset_dealloc(PyObject *o) {
     PyObject_Del(o);
