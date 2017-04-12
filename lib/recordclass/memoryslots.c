@@ -28,9 +28,6 @@ _PyObject_GetBuiltin(const char *name)
 #endif
 
 static PyTypeObject PyMemorySlots_Type;
-//static PyObject * memoryslots_slice(PyObject *a, Py_ssize_t ilow, Py_ssize_t ihigh);
-static PyObject* memoryslots_iter(PyObject *seq);
-
 typedef PyTupleObject PyMemorySlotsObject;
 
 PyObject *
@@ -139,11 +136,13 @@ memoryslots_dealloc(PyMemorySlotsObject *op)
     Py_ssize_t i;
 
     PyObject_GC_UnTrack(op);
+    /*Py_TRASHCAN_SAFE_BEGIN(op)*/
     for (i = Py_SIZE(op); --i >= 0; ) {
         Py_CLEAR(op->ob_item[i]);
     }
 
     Py_TYPE(op)->tp_free((PyObject *)op);
+    /*Py_TRASHCAN_SAFE_END(op)*/
 }
 
 static int
@@ -650,6 +649,8 @@ static PyMemberDef memoryslots_members[] = {
     {NULL}
 };
 */
+
+static PyObject* memoryslots_iter(PyObject *seq);
 
 static PyTypeObject PyMemorySlots_Type = {
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
