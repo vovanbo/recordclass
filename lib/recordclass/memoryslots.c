@@ -848,7 +848,7 @@ memoryslots_iter(PyObject *seq)
 
 struct itemgetset_object {
   PyObject_HEAD
-  int i;
+  Py_ssize_t i;
 };
 
 /*static PyTypeObject ItemGetSet_Type;*/
@@ -860,7 +860,7 @@ static PyMethodDef itemgetset_methods[] = {
 static PyObject* itemgetset_new(PyTypeObject *t, PyObject *args, PyObject *k) {    
     PyObject *ob;
     PyObject *item;
-    int i;
+    Py_ssize_t i;
 
     if ((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0) {
         ob = (*t->tp_alloc)(t, 0);
@@ -900,7 +900,7 @@ static PyObject* itemgetset_new(PyTypeObject *t, PyObject *args, PyObject *k) {
 // }
 
 static void itemgetset_dealloc(PyObject *o) {
-    (*Py_TYPE(o)->tp_free)(o);
+    PyObject_Del(o);
 }
 
 static PyObject* itemgetset_get(PyObject *self, PyObject *obj, PyObject *type) {
