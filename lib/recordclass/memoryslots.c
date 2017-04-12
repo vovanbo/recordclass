@@ -862,15 +862,10 @@ static PyObject* itemgetset_new(PyTypeObject *t, PyObject *args, PyObject *k) {
     PyObject *item;
     Py_ssize_t i;
 
-    if ((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0) {
-        ob = (*t->tp_alloc)(t, 0);
-    } else {
-        ob = (PyObject*) PyBaseObject_Type.tp_new(t, PyTuple_New(0), 0);
-    }
-    
+    ob = (PyObject*) PyBaseObject_Type.tp_new(t, PyTuple_New(0), 0);    
     if (ob == NULL)
         return NULL;
-    
+        
     item = PyTuple_GET_ITEM(args, 0);
 
     i = PyNumber_AsSsize_t(item, PyExc_IndexError);
@@ -878,26 +873,11 @@ static PyObject* itemgetset_new(PyTypeObject *t, PyObject *args, PyObject *k) {
         Py_DECREF(ob);
         return NULL;
     }
-    else {
-        ((struct itemgetset_object*)ob)->i = i;
-    }    
+
+    ((struct itemgetset_object*)ob)->i = i;
     return ob;
 }
 
-// static int itemgetset_init(PyObject *self, PyObject *args, PyObject *kwds) {
-//     PyObject *item;
-//     Py_ssize_t i;
-//         
-//     item = PyTuple_GET_ITEM(args, 0);
-//     i = PyNumber_AsSsize_t(item, PyExc_IndexError);
-//     if (i == -1 && PyErr_Occurred()) {
-//         return -1;
-//     }
-//     else {
-//         ((struct itemgetset_object*)self)->i = i;
-//         return 0;
-//     }    
-// }
 
 static void itemgetset_dealloc(PyObject *o) {
     PyObject_Del(o);
