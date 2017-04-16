@@ -27,6 +27,8 @@ _PyObject_GetBuiltin(const char *name)
 }
 #endif
 
+#define DEFERRED_ADDRESS(addr) 0
+
 static PyTypeObject PyMemorySlots_Type;
 typedef PyTupleObject PyMemorySlotsObject;
 
@@ -646,7 +648,7 @@ static PyMethodDef memoryslots_methods[] = {
 static PyObject* memoryslots_iter(PyObject *seq);
 
 static PyTypeObject PyMemorySlots_Type = {
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PyVarObject_HEAD_INIT(DEFERRED_ADDRESS(&PyType_Type), 0)
     "recordclass.memoryslots.memoryslots",          /* tp_name */
     sizeof(PyMemorySlotsObject) - sizeof(PyObject*),      /* tp_basicsize */
     sizeof(PyObject*),                              /* tp_itemsize */
@@ -801,7 +803,7 @@ static PyMethodDef memoryslotsiter_methods[] = {
 };
 
 PyTypeObject PyMemorySlotsIter_Type = {
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PyVarObject_HEAD_INIT(DEFERRED_ADDRESS(&PyType_Type), 0)
     "recordclass.memoryslots.memoryslots_iterator",                           /* tp_name */
     sizeof(memoryslotsiterobject),                    /* tp_basicsize */
     0,                                          /* tp_itemsize */
@@ -918,7 +920,7 @@ static int itemgetset_set(PyObject *self, PyObject *obj, PyObject *value) {
 }
 
 static PyTypeObject ItemGetSet_Type = {
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PyVarObject_HEAD_INIT(DEFERRED_ADDRESS(&PyType_Type), 0)
     "recordclass.memoryslots.itemgetset", /*tp_name*/
     sizeof(struct itemgetset_object), /*tp_basicsize*/
     0, /*tp_itemsize*/
