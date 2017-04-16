@@ -45,9 +45,8 @@ PyMemorySlots_New(Py_ssize_t size)
     if (op == NULL)
         return NULL;
 
-    if (size > 0) {
-        for (i=0; i < size; i++)
-            op->ob_item[i] = NULL;
+    for (i = Py_SIZE(op); --i >= 0; ) {
+        op->ob_item[i] = NULL;
     }
 
     PyObject_GC_Track(op);
@@ -84,12 +83,10 @@ memoryslots_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    if (n > 0) {
-        for(i = 0; i < n; i++) {
-            item = PyTuple_GET_ITEM(tmp, i);
-            newobj->ob_item[i] = item;
-            Py_INCREF(item);
-        }
+    for (i = n; --i >= 0; ) {
+        item = PyTuple_GET_ITEM(tmp, i);
+        newobj->ob_item[i] = item;
+        Py_INCREF(item);
     }
 
     Py_DECREF(tmp);
@@ -108,12 +105,10 @@ memoryslots_getnewargs(PyMemorySlotsObject *ob)
     if (res == NULL)
         return NULL;
 
-    if (n > 0) {
-        for (i=0; i<n; i++) {
-            v = ob->ob_item[i];
-            res->ob_item[i] = v;
-            Py_INCREF(v);
-        }
+    for (i = n; --i >= 0; ) {
+        v = ob->ob_item[i];
+        res->ob_item[i] = v;
+        Py_INCREF(v);
     }
 
     return (PyObject*)res;
@@ -140,7 +135,6 @@ memoryslots_dealloc(PyMemorySlotsObject *op)
     for (i = Py_SIZE(op); --i >= 0; ) {
         Py_CLEAR(op->ob_item[i]);
     }
-
     Py_TYPE(op)->tp_free((PyObject *)op);
     /*Py_TRASHCAN_SAFE_END(op)*/
 }
@@ -494,9 +488,9 @@ PyDoc_STRVAR(memoryslots_len_doc,
 "T.__len__() -- len of T");
 
 static Py_ssize_t
-memoryslots_len(PyMemorySlotsObject *self)
+memoryslots_len(PyMemorySlotsObject *op)
 {
-    return Py_SIZE(self);
+    return Py_SIZE(op);
 }
 
 PyDoc_STRVAR(memoryslots_sizeof_doc,
@@ -622,9 +616,10 @@ memoryslots_reduce(PyObject *ob)
 
     tmp = PySequence_Tuple(ob);
     args = PyTuple_Pack(1, tmp);
+    Py_DECREF(tmp);
     if (args == NULL)
         return NULL;
-
+    
     result = PyTuple_Pack(2, &PyMemorySlots_Type, args);
     Py_DECREF(args);
     return result;
@@ -641,14 +636,12 @@ static PyMethodDef memoryslots_methods[] = {
     {NULL}
 };
 
-/*
-static PyMemberDef memoryslots_members[] = {
-    {"default_factory", T_OBJECT,
-     offsetof(memoryslotsobject, default_factory), 0,
-     PyDoc_STR("Factory for default value called by __missing__().")},
-    {NULL}
-};
-*/
+// static PyMemberDef memoryslots_members[] = {
+//     {"default_factory", T_OBJECT,
+//      offsetof(memoryslotsobject, default_factory), 0,
+//      PyDoc_STR("Factory for default value called by __missing__().")},
+//     {NULL}
+// };
 
 static PyObject* memoryslots_iter(PyObject *seq);
 
@@ -741,8 +734,8 @@ memoryslotsiter_next(memoryslotsiterobject *it)
 
     if (it->it_index < PyTuple_GET_SIZE(seq)) {
         item = PyTuple_GET_ITEM(seq, it->it_index);
-        ++it->it_index;
         Py_INCREF(item);
+        ++it->it_index;
         return item;
     }
 
@@ -802,8 +795,8 @@ PyDoc_STRVAR(setstate_doc, "Set state information for unpickling.");
 
 static PyMethodDef memoryslotsiter_methods[] = {
     {"__length_hint__", (PyCFunction)memoryslotsiter_len, METH_NOARGS, length_hint_doc},
-    {"__reduce__", (PyCFunction)memoryslotsiter_reduce, METH_NOARGS, memoryslotsiter_reduce_doc},
-    {"__setstate__", (PyCFunction)memoryslotsiter_setstate, METH_O, setstate_doc},
+    {"__reduce__",      (PyCFunction)memoryslotsiter_reduce, METH_NOARGS, memoryslotsiter_reduce_doc},
+    {"__setstate__",    (PyCFunction)memoryslotsiter_setstate, METH_O, setstate_doc},
     {NULL,              NULL}           /* sentinel */
 };
 
