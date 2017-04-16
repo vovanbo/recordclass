@@ -8,7 +8,7 @@ import sys
 _PY36 = sys.version_info[:2] >= (3, 6)
 
 if _PY36:
-    from recordclass.test.test_typing import *
+    from recordclass.test.typing.test_typing import *
 
 def test_all():
     import unittest

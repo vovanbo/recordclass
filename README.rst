@@ -27,6 +27,7 @@ Changes:
 
 **0.4.3**
 
-* Add support for typing for python 3.6 (patches from Vladimir Bolshakov)
+* Add support for typing for python 3.6 (patches from Vladimir Bolshakov).
+* Resolve memory leak issue.
 
 

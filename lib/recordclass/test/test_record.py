@@ -7,8 +7,6 @@ import keyword
 import re
 import sys
 
-from recordclass import RecordClass
-
 try:
     from test import support
 except:

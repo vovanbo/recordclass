@@ -1,6 +1,6 @@
 # {{LICENCE}}
 
-from recordclass.test.test_typing import *
+from recordclass.test.typing.test_typing import *
 
 def test_all():
     import unittest
