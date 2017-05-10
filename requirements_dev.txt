@@ -32,7 +32,7 @@ pyparsing==2.2.0          # via packaging
 pytest==3.0.7
 pytz==2016.10             # via babel
 pyyaml==3.12              # via watchdog
-requests==2.13.0          # via sphinx
+requests==2.14.2          # via sphinx
 six==1.10.0               # via cryptography, packaging, setuptools, sphinx
 snowballstemmer==1.2.1    # via sphinx
 sphinx==1.5.5
