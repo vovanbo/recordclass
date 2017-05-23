@@ -29,7 +29,7 @@ pycparser==2.17           # via cffi
 pyflakes==1.5.0           # via flake8
 pygments==2.2.0           # via sphinx
 pyparsing==2.2.0          # via packaging
-pytest==3.0.7
+pytest==3.1.0
 pytz==2016.10             # via babel
 pyyaml==3.12              # via watchdog
 requests==2.14.2          # via sphinx
