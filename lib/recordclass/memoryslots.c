@@ -433,13 +433,14 @@ memoryslots_ass_subscript(PyObject* self, PyObject* item, PyObject* value)
         Py_ssize_t start, stop, step, slicelength;
 
 #if PY_MAJOR_VERSION >= 3
-        if (PySlice_GetIndicesEx(item, Py_SIZE(self),
+        if (PySlice_GetIndicesEx(item, (Py_SIZE(self)), &start, &stop, &step, &slicelength) < 0) {
+            return -1; 
+        }
 #else
-        if (PySlice_GetIndicesEx((PySliceObject*)item, Py_SIZE(self),
-#endif
-                         &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx(((PySliceObject*)item), (Py_SIZE(self)), &start, &stop, &step, &slicelength) < 0) {
             return -1;
         }
+#endif
 
         return memoryslots_ass_slice(self, start, stop, value);
 
