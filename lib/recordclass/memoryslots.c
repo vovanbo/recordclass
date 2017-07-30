@@ -402,13 +402,15 @@ memoryslots_subscript(PyObject* self, PyObject* item)
         if (PySlice_GetIndicesEx(item,
                 PyTuple_GET_SIZE(self),
                 &start, &stop, &step, &slicelength) < 0) {
+            return NULL;
+        }
 #else
         if (PySlice_GetIndicesEx((PySliceObject*)item,
                 PyTuple_GET_SIZE(self),
                 &start, &stop, &step, &slicelength) < 0) {
-#endif
             return NULL;
         }
+#endif
                 
         return memoryslots_slice((PyObject*)self, start, stop);
     }
