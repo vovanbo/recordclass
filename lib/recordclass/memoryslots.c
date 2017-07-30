@@ -399,15 +399,11 @@ memoryslots_subscript(PyObject* self, PyObject* item)
         Py_ssize_t start, stop, step, slicelength;
 
 #if PY_MAJOR_VERSION >= 3
-        if (PySlice_GetIndicesEx(item,
-                PyTuple_GET_SIZE(self),
-                &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx(item, (PyTuple_GET_SIZE(self)), &start, &stop, &step, &slicelength) < 0) {
             return NULL;
         }
 #else
-        if (PySlice_GetIndicesEx((PySliceObject*)item,
-                PyTuple_GET_SIZE(self),
-                &start, &stop, &step, &slicelength) < 0) {
+        if (PySlice_GetIndicesEx(((PySliceObject*)item), (PyTuple_GET_SIZE(self)), &start, &stop, &step, &slicelength) < 0)  {
             return NULL;
         }
 #endif
