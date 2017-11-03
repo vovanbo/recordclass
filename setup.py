@@ -24,9 +24,6 @@
 # THE SOFTWARE.
 #
 
-import sys as _sys
-_PY36 = _sys.version_info[:2] >= (3, 6)
-
 from setuptools import setup
 from setuptools.command.build_ext import build_ext
 from setuptools.extension import Extension
@@ -45,18 +42,20 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    # TODO: put package requirements here
+    'typing',
 ]
 
 test_requirements = [
-    'pytest>=3.0.7,<3.1'
+    'pytest>=3.2'
 ]
 
 
 setup(
     name='trafaretrecord',
     version='0.1.0',
-    description='Fork of recordclass (mutable variant of collections.namedtuple, which supports assignments)',
+    description='Fork of recordclass '
+                '(mutable variant of collections.namedtuple, '
+                'which supports assignments)',
     long_description=readme + '\n\n' + history,
     author='Vladimir Bolshakov',
     author_email='vovanbo@gmail.com',
