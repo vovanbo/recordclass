@@ -53,7 +53,8 @@ def test_field_defaults():
         c: typing.List[typing.Any] = [1, 'a', (123, 456)]
 
     tmp = A()
-    assert tmp._field_types == {'a': int, 'b': str, 'c': typing.List[typing.Any]}
+    assert tmp._field_types == \
+           {'a': int, 'b': str, 'c': typing.List[typing.Any]}
     assert tmp._field_defaults == {'a': 1, 'b': 'b', 'c': [1, 'a', (123, 456)]}
     assert tmp == A(a=1, b='b', c=[1, 'a', (123, 456)])
 
@@ -72,7 +73,10 @@ def test_typing_self():
 
     the_same = A(same=123, many=[])
     tmp = A(same=the_same, many=[the_same, the_same])
-    assert tmp._field_types == {'same': typing.Type['A'], 'many': typing.Sequence[AnyTrafaret]}
-    assert tmp.same == the_same
+    assert tmp._field_types == \
+           {'same': typing.Type['A'], 'many': typing.Sequence[AnyTrafaret]}
+    assert tmp.same is the_same
     assert tmp.many == [the_same, the_same]
-    assert tmp._field_types['same']._subs_tree()[1]._eval_type(globals(), locals()) == A
+    eval_type = tmp._field_types['same']._subs_tree()[1]._eval_type(globals(),
+                                                                    locals())
+    assert eval_type is A

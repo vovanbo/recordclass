@@ -70,7 +70,8 @@ def test_factory_doc_attr():
     [('abc', 'class'), ('abc', '_1')],  # field has keyword
     [('8efg', '9ghi'), ('_0', '_1')],  # field starts with digit
     [('abc', '_efg'), ('abc', '_1')],  # field with leading underscore
-    [('abc', 'efg', 'efg', 'ghi'), ('abc', 'efg', '_2', 'ghi')],  # duplicate field
+    # duplicate field
+    [('abc', 'efg', 'efg', 'ghi'), ('abc', 'efg', '_2', 'ghi')],
     [('abc', '', 'x'), ('abc', '_1', 'x')],  # fieldname is a space
 ])
 def test_name_fixer(spec, renamed):
@@ -137,6 +138,8 @@ def test_tupleness():
 
 
 def test_odd_sizes():
+    import string, random
+
     Zero = trafaretrecord('Zero', '')
     assert Zero() == ()
     assert Zero._make([]) == ()
@@ -156,7 +159,6 @@ def test_odd_sizes():
 
     # n = 5000
     n = 254  # SyntaxError: more than 255 arguments:
-    import string, random
     names = list(set(''.join([random.choice(string.ascii_letters)
                               for j in range(10)]) for i in range(n)))
     n = len(names)
