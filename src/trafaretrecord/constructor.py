@@ -1,11 +1,13 @@
 from keyword import iskeyword as _iskeyword
+import itertools
+import logging
 import re
-import sys as _sys
+import sys
 from typing import _type_check
 
 from .memoryslots import memoryslots
 
-_PY36 = _sys.version_info[:2] >= (3, 6)
+_PY36 = sys.version_info[:2] >= (3, 6)
 IDENTIFIER_REGEX = re.compile(r'^[a-z_][a-z0-9_]*$', flags=re.I)
 
 # attributes prohibited to set in TrafaretRecord class syntax
@@ -14,6 +16,8 @@ _prohibited = ('__new__', '__init__', '__slots__', '__getnewargs__',
                '_make', '_replace', '_asdict')
 
 _special = ('__module__', '__name__', '__qualname__', '__annotations__')
+
+logger = logging.getLogger(__name__)
 
 
 def isidentifier(s):
@@ -66,7 +70,7 @@ class {typename}(memoryslots):
     __dict__ = _property(_asdict)
         
     def __getnewargs__(self):
-        'Return self as a plain tuple.  Used by copy and pickle.'
+        'Return self as a plain tuple. Used by copy and pickle.'
         return tuple(self)
 
     def __getstate__(self):
@@ -84,27 +88,27 @@ _repr_template = '{name}=%r'
 _field_template = '    {name} = _itemgetset({index:d})'
 
 
-
-def trafaretrecord(typename, field_names, verbose=False, rename=False, source=True):
+def trafaretrecord(typename, field_names, verbose=False, rename=False,
+                   source=True):
     """Returns a new subclass of array with named fields.
 
     >>> Point = trafaretrecord('Point', ['x', 'y'])
-    >>> Point.__doc__                   # docstring for the new class
+    >>> Point.__doc__        # docstring for the new class
     'Point(x, y)'
-    >>> p = Point(11, y=22)             # instantiate with positional args or keywords
-    >>> p[0] + p[1]                     # indexable like a plain tuple
+    >>> p = Point(11, y=22)  # instantiate with positional args or keywords
+    >>> p[0] + p[1]          # indexable like a plain tuple
     33
-    >>> x, y = p                        # unpack like a regular tuple
+    >>> x, y = p             # unpack like a regular tuple
     >>> x, y
     (11, 22)
-    >>> p.x + p.y                       # fields also accessable by name
+    >>> p.x + p.y            # fields also accessable by name
     33
-    >>> d = p._asdict()                 # convert to a dictionary
+    >>> d = p._asdict()      # convert to a dictionary
     >>> d['x']
     11
-    >>> Point(**d)                      # convert from a dictionary
+    >>> Point(**d)           # convert from a dictionary
     Point(x=11, y=22)
-    >>> p._replace(x=100)               # _replace() is like str.replace() but targets named fields
+    >>> p._replace(x=100)    # _replace() is like str.replace() but targets named fields
     Point(x=100, y=22)
     """
 
@@ -112,19 +116,23 @@ def trafaretrecord(typename, field_names, verbose=False, rename=False, source=Tr
     # message or automatically replace the field name with a valid name.
     if isinstance(field_names, str):
         field_names = field_names.replace(',', ' ').split()
-    field_names = list(map(str, field_names))
+
+    field_names = [str(f) for f in field_names]
     typename = str(typename)
     if rename:
         seen = set()
         for index, name in enumerate(field_names):
-            if (not isidentifier(name)
-                or _iskeyword(name)
-                or name.startswith('_')
-                or name in seen):
+            if (
+                not isidentifier(name) or
+                _iskeyword(name) or
+                name.startswith('_') or
+                name in seen
+            ):
                 field_names[index] = '_%d' % index
             seen.add(name)
-    for name in [typename] + field_names:
-        if type(name) != str:
+
+    for name in itertools.chain([typename], field_names):
+        if not isinstance(name, str):
             raise TypeError('Type names and field names must be strings')
         if not isidentifier(name):
             raise ValueError('Type names and field names must be valid '
@@ -132,6 +140,7 @@ def trafaretrecord(typename, field_names, verbose=False, rename=False, source=Tr
         if _iskeyword(name):
             raise ValueError('Type names and field names cannot be a '
                              'keyword: %r' % name)
+
     seen = set()
     for name in field_names:
         if name.startswith('_') and not rename:
@@ -155,36 +164,40 @@ def trafaretrecord(typename, field_names, verbose=False, rename=False, source=Tr
 
     # Execute the template string in a temporary namespace and support
     # tracing utilities by setting a value for frame.f_globals['__name__']
-    namespace = dict(__name__='trafaretrecord_' + typename)
+    namespace = dict(__name__='trafaretrecord_%s' % typename)
     code = compile(class_definition, "", "exec")
     eval(code, namespace)
     result = namespace[typename]
     if source:
         result._source = class_definition
     if verbose:
-        print(result._source)
+        logger.info(result._source)
 
     # For pickling to work, the __module__ variable needs to be set to the frame
     # where the named tuple is created.  Bypass this step in environments where
     # sys._getframe is not defined (Jython for example) or sys._getframe is not
     # defined for arguments greater than 0 (IronPython).
     try:
-        result.__module__ = _sys._getframe(1).f_globals.get('__name__', '__main__')
+        result.__module__ = \
+            sys._getframe(1).f_globals.get('__name__', '__main__')
     except (AttributeError, ValueError):
         pass
 
     return result
 
 
-# The below code is almost the same as https://github.com/python/typing/blob/master/src/typing.py#L2060-L2154
+# The below code is almost the same as
+# https://github.com/python/typing/blob/master/src/typing.py#L2060-L2154
 
 def _make_trafaretrecord(name, types):
-    msg = "TrafaretRecord('Name', [(f0, t0), (f1, t1), ...]); each t must be a type"
+    msg = "TrafaretRecord('Name', [(f0, t0), (f1, t1), ...]); " \
+          "each t must be a type"
     types = [(n, _type_check(t, msg)) for n, t in types]
     rec_cls = trafaretrecord(name, [n for n, t in types])
     rec_cls._field_types = dict(types)
     try:
-        rec_cls.__module__ = _sys._getframe(2).f_globals.get('__name__', '__main__')
+        rec_cls.__module__ = \
+            sys._getframe(2).f_globals.get('__name__', '__main__')
     except (AttributeError, ValueError):
         pass
     return rec_cls
@@ -194,9 +207,13 @@ class TrafaretRecordMeta(type):
     def __new__(cls, typename, bases, ns):
         if ns.get('_root', False):
             return super().__new__(cls, typename, bases, ns)
+
         if not _PY36:
-            raise TypeError("Class syntax for TrafaretRecord is only supported"
-                            " in Python 3.6+")
+            raise TypeError(
+                "Class syntax for TrafaretRecord is only supported "
+                "in Python 3.6+"
+            )
+
         types = ns.get('__annotations__', {})
         klass = _make_trafaretrecord(typename, types.items())
 
@@ -208,16 +225,21 @@ class TrafaretRecordMeta(type):
                 defaults.append(default_value)
                 defaults_dict[field_name] = default_value
             elif defaults:
-                raise TypeError("Non-default trafaretrecord field {field_name} cannot "
-                                "follow default field(s) {default_names}"
-                                .format(field_name=field_name,
-                                        default_names=', '.join(defaults_dict.keys())))
+                raise TypeError(
+                    "Non-default TrafaretRecord field {field_name} cannot "
+                    "follow default field(s) {default_names}".format(
+                        field_name=field_name,
+                        default_names=', '.join(defaults_dict.keys())
+                    )
+                )
         klass.__new__.__defaults__ = tuple(defaults)
         klass._field_defaults = defaults_dict
-        # update from user namespace without overriding special trafaretrecord attributes
+        # update from user namespace without overriding special TrafaretRecord
+        # attributes
         for key in ns:
             if key in _prohibited:
-                raise AttributeError("Cannot overwrite TrafaretRecordMeta attribute " + key)
+                raise AttributeError("Cannot overwrite TrafaretRecordMeta "
+                                     "attribute " + key)
             elif key not in _special and key not in klass._fields:
                 setattr(klass, key, ns[key])
 
@@ -227,13 +249,13 @@ class TrafaretRecordMeta(type):
 class TrafaretRecord(metaclass=TrafaretRecordMeta):
     _root = True
 
-    def __new__(self, typename, fields=None, **kwargs):
+    def __new__(cls, typename, fields=None, **kwargs):
         if kwargs and not _PY36:
-            raise TypeError("Keyword syntax for TrafaretRecord is only supported"
-                            " in Python 3.6+")
+            raise TypeError("Keyword syntax for TrafaretRecord "
+                            "is only supported in Python 3.6+")
         if fields is None:
             fields = kwargs.items()
         elif kwargs:
-            raise TypeError("Either list of fields or keywords"
-                            " can be provided to TrafaretRecord, not both")
+            raise TypeError("Either list of fields or keywords "
+                            "can be provided to TrafaretRecord, not both")
         return _make_trafaretrecord(typename, fields)

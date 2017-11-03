@@ -195,8 +195,8 @@ memoryslots_repr(PyObject *dd)
 }
 
 PyDoc_STRVAR(memoryslots_doc,
-"memoryslots([...]) --> memoryslots\n\n\
-");
+"memoryslots([...]) --> memoryslots\n\n"
+);
 
 static PyObject *
 memoryslots_concat(PyTupleObject *a, PyObject *bb)
