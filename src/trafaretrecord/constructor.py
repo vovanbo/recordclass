@@ -1,7 +1,9 @@
-import sys as _sys
 from keyword import iskeyword as _iskeyword
 import re
+import sys as _sys
 from typing import _type_check
+
+from .memoryslots import memoryslots
 
 _PY36 = _sys.version_info[:2] >= (3, 6)
 IDENTIFIER_REGEX = re.compile(r'^[a-z_][a-z0-9_]*$', flags=re.I)
@@ -80,6 +82,7 @@ class {typename}(memoryslots):
 
 _repr_template = '{name}=%r'
 _field_template = '    {name} = _itemgetset({index:d})'
+
 
 
 def trafaretrecord(typename, field_names, verbose=False, rename=False, source=True):

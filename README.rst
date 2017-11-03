@@ -46,3 +46,9 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 
+**0.4.3**
+
+* Add support for typing for python 3.6 (patches from Vladimir Bolshakov).
+* Resolve memory leak issue.
+
+
