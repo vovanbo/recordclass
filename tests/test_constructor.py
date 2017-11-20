@@ -104,6 +104,12 @@ def test_instance():
     p.x = 1
     assert p.x == 1
 
+    p.x = 2
+    assert p.x == 2
+
+    p._replace(x=3)
+    assert p.x == 3
+
     # verify that field string can have commas
     Point = trafaretrecord('Point', 'x, y')
     p = Point(x=11, y=22)
