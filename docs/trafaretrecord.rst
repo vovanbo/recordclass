@@ -4,8 +4,8 @@ trafaretrecord package
 Submodules
 ----------
 
-trafaretrecord.constructor module
----------------------------------
+trafaretrecord\.constructor module
+----------------------------------
 
 .. automodule:: trafaretrecord.constructor
     :members:
