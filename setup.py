@@ -3,7 +3,8 @@
 
 # The MIT License (MIT)
 #
-# Copyright (c) <2011-2015> <Shibzukhov Zaur, szport at gmail dot com>
+# Copyright (c) 2011-2017 Shibzukhov Zaur <szport at gmail dot com>,
+#                         Vladimir Bolshakov <vovanbo at gmail dot com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +29,7 @@ from setuptools import setup
 from setuptools.command.build_ext import build_ext
 from setuptools.extension import Extension
 
-ext_modules = [
+EXTENSIONS = [
     Extension(
         "trafaretrecord.memoryslots",
         ["src/trafaretrecord/memoryslots.c"]
@@ -36,16 +37,16 @@ ext_modules = [
 ]
 
 with open('README.rst') as readme_file:
-    readme = readme_file.read()
+    README = readme_file.read()
 
 with open('HISTORY.rst') as history_file:
-    history = history_file.read()
+    HISTORY = history_file.read()
 
-requirements = [
+REQUIREMENTS = [
     'typing',
 ]
 
-test_requirements = [
+TEST_REQUIREMENTS = [
     'pytest>=3.2'
 ]
 
@@ -56,7 +57,7 @@ setup(
     description='Fork of recordclass '
                 '(mutable variant of collections.namedtuple, '
                 'which supports assignments)',
-    long_description=readme + '\n\n' + history,
+    long_description=README + '\n\n' + HISTORY,
     author='Vladimir Bolshakov',
     author_email='vovanbo@gmail.com',
     url='https://github.com/vovanbo/trafaretrecord',
@@ -65,11 +66,11 @@ setup(
     ],
     package_dir={'': 'src'},
     include_package_data=True,
-    install_requires=requirements,
+    install_requires=REQUIREMENTS,
     license="MIT License",
     zip_safe=False,
     cmdclass={'build_ext': build_ext},
-    ext_modules=ext_modules,
+    ext_modules=EXTENSIONS,
     download_url='https://github.com/vovanbo/trafaretrecord',
     platforms='Linux, Mac OS X, Windows',
     keywords=['namedtuple', 'record', 'struct'],
@@ -85,5 +86,5 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
     test_suite='tests',
-    tests_require=test_requirements
+    tests_require=TEST_REQUIREMENTS
 )
