@@ -1,11 +1,9 @@
-from keyword import iskeyword as _iskeyword
 import itertools
 import logging
 import re
 import sys
+from keyword import iskeyword as _iskeyword
 from typing import _type_check
-
-from .memoryslots import memoryslots
 
 _PY36 = sys.version_info[:2] >= (3, 6)
 IDENTIFIER_REGEX = re.compile(r'^[a-z_][a-z0-9_]*$', flags=re.I)
@@ -54,7 +52,10 @@ class {typename}(memoryslots):
         return result
 
     def _replace(_self, **kwds):
-        'Return a new {typename} object replacing specified fields with new values'
+        \"\"\"
+        Return a new {typename} object replacing specified fields
+        with new values
+        \"\"\"
         for name, val in kwds.items():
             setattr(_self, name, val)
         return _self
@@ -68,7 +69,7 @@ class {typename}(memoryslots):
         return OrderedDict(zip(self.__class__._fields, self))
 
     __dict__ = _property(_asdict)
-        
+
     def __getnewargs__(self):
         'Return self as a plain tuple. Used by copy and pickle.'
         return tuple(self)
@@ -76,7 +77,7 @@ class {typename}(memoryslots):
     def __getstate__(self):
         'Exclude the OrderedDict from pickling'
         return None
-        
+
     def __reduce__(self):
         'Reduce'
         return type(self), tuple(self)
@@ -173,10 +174,11 @@ def trafaretrecord(typename, field_names, verbose=False, rename=False,
     if verbose:
         logger.info(result._source)
 
-    # For pickling to work, the __module__ variable needs to be set to the frame
-    # where the named tuple is created.  Bypass this step in environments where
-    # sys._getframe is not defined (Jython for example) or sys._getframe is not
-    # defined for arguments greater than 0 (IronPython).
+    # For pickling to work, the __module__ variable needs to be set
+    # to the frame where the named tuple is created. Bypass this step
+    # in environments where sys._getframe is not defined (Jython for example)
+    # or sys._getframe is not defined for arguments greater than 0
+    # (IronPython).
     try:
         result.__module__ = \
             sys._getframe(1).f_globals.get('__name__', '__main__')
