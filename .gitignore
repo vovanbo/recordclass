@@ -97,6 +97,8 @@ ENV/
 # Pipenv
 Pipfile.lock
 
+.mypy_cache/
+
 ### VisualStudioCode template
 .vscode/*
 !.vscode/settings.json
