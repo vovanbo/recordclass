@@ -53,7 +53,7 @@ TEST_REQUIREMENTS = [
 
 setup(
     name='trafaretrecord',
-    version='0.1.0',
+    version='0.1.1',
     description='Fork of recordclass '
                 '(mutable variant of collections.namedtuple, '
                 'which supports assignments)',
