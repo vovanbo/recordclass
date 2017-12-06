@@ -37,6 +37,8 @@ clean-build: ## remove build artifacts
 	find . -name '*.egg' -exec rm -f {} +
 
 clean-pyc: ## remove Python file artifacts
+	rm -fr .cache/
+	rm -fr .mypy_cache/
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
@@ -67,7 +69,7 @@ coverage: ## check code coverage quickly with the default Python
 docs: ## generate Sphinx HTML documentation, including API docs
 	rm -f docs/trafaretrecord.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ src/trafaretrecord
+	sphinx-apidoc -o docs/ trafaretrecord
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 	$(BROWSER) docs/_build/html/index.html

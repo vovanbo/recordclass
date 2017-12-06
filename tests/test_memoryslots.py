@@ -1,7 +1,7 @@
 import pickle
 
 import pytest
-from trafaretrecord.memoryslots import memoryslots
+from trafaretrecord import memoryslots
 
 
 def test_constructors():
